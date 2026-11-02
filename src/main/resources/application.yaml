@@ -21,3 +21,14 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+
+app:
+  jobs:
+    zarc:
+      enabled: ${ZARC_JOB_ENABLED:true}
+      cron: "${ZARC_JOB_CRON:0 0 3 * * ?}"
+      batch-size: 1000
+      ckan-package-url: "${ZARC_CKAN_URL:https://dados.agricultura.gov.br/api/3/action/package_show?id=tabua-de-risco-zoneamento-agricola-de-risco-climatico}"
+      safras-alvo:
+        - "2024/2025"
+        - "2025/2026"
