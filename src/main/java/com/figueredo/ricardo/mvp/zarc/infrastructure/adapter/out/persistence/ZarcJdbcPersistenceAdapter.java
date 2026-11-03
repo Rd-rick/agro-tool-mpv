@@ -7,7 +7,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class ZarcJdbcPersistenceAdapter implements ZarcPersistencePort {
@@ -32,6 +35,9 @@ public class ZarcJdbcPersistenceAdapter implements ZarcPersistencePort {
             )
             ON CONFLICT (municipio_id, cultura_codigo_fonte_id, safra_ini, safra_fim, ciclo_codigo, solo_codigo, manejo_codigo, portaria)
             DO UPDATE SET
+                ciclo_descricao = EXCLUDED.ciclo_descricao,
+                solo_descricao = EXCLUDED.solo_descricao,
+                manejo_descricao = EXCLUDED.manejo_descricao,
                 dec_01 = EXCLUDED.dec_01,
                 dec_02 = EXCLUDED.dec_02,
                 dec_03 = EXCLUDED.dec_03,
@@ -70,6 +76,7 @@ public class ZarcJdbcPersistenceAdapter implements ZarcPersistencePort {
                 dec_36 = EXCLUDED.dec_36,
                 atualizado_em = NOW()
             WHERE (
+                tb_zarc_zoneamento.ciclo_descricao, tb_zarc_zoneamento.solo_descricao, tb_zarc_zoneamento.manejo_descricao,
                 tb_zarc_zoneamento.dec_01, tb_zarc_zoneamento.dec_02, tb_zarc_zoneamento.dec_03, tb_zarc_zoneamento.dec_04,
                 tb_zarc_zoneamento.dec_05, tb_zarc_zoneamento.dec_06, tb_zarc_zoneamento.dec_07, tb_zarc_zoneamento.dec_08,
                 tb_zarc_zoneamento.dec_09, tb_zarc_zoneamento.dec_10, tb_zarc_zoneamento.dec_11, tb_zarc_zoneamento.dec_12,
@@ -80,6 +87,7 @@ public class ZarcJdbcPersistenceAdapter implements ZarcPersistencePort {
                 tb_zarc_zoneamento.dec_29, tb_zarc_zoneamento.dec_30, tb_zarc_zoneamento.dec_31, tb_zarc_zoneamento.dec_32,
                 tb_zarc_zoneamento.dec_33, tb_zarc_zoneamento.dec_34, tb_zarc_zoneamento.dec_35, tb_zarc_zoneamento.dec_36
             ) IS DISTINCT FROM (
+                EXCLUDED.ciclo_descricao, EXCLUDED.solo_descricao, EXCLUDED.manejo_descricao,
                 EXCLUDED.dec_01, EXCLUDED.dec_02, EXCLUDED.dec_03, EXCLUDED.dec_04,
                 EXCLUDED.dec_05, EXCLUDED.dec_06, EXCLUDED.dec_07, EXCLUDED.dec_08,
                 EXCLUDED.dec_09, EXCLUDED.dec_10, EXCLUDED.dec_11, EXCLUDED.dec_12,
@@ -105,10 +113,12 @@ public class ZarcJdbcPersistenceAdapter implements ZarcPersistencePort {
             return 0;
         }
 
+        List<ZarcRegistro> loteUnico = deduplicarLote(registros);
+
         int[][] updateCounts = jdbcTemplate.batchUpdate(
                 SQL_UPSERT,
-                registros,
-                registros.size(),
+                loteUnico,
+                loteUnico.size(),
                 (ps, reg) -> {
                     ps.setLong(1, reg.municipioId());
                     ps.setLong(2, reg.culturaCodigoFonteId());
@@ -134,8 +144,9 @@ public class ZarcJdbcPersistenceAdapter implements ZarcPersistencePort {
                     }
                     ps.setString(11, reg.portaria());
 
-                    for (int i = 0; i < 36; i++) {
-                        ps.setShort(12 + i, reg.decendios().get(i).shortValue());
+                    int paramIndex = 12;
+                    for (Integer decendio : reg.decendios()) {
+                        ps.setShort(paramIndex++, decendio.shortValue());
                     }
                 }
         );
@@ -150,4 +161,33 @@ public class ZarcJdbcPersistenceAdapter implements ZarcPersistencePort {
         }
         return afetados;
     }
+
+    private List<ZarcRegistro> deduplicarLote(List<ZarcRegistro> registros) {
+        Map<ChaveUnicaZarc, ZarcRegistro> unicos = new LinkedHashMap<>(registros.size());
+        for (ZarcRegistro reg : registros) {
+            ChaveUnicaZarc chave = new ChaveUnicaZarc(
+                    reg.municipioId(),
+                    reg.culturaCodigoFonteId(),
+                    reg.safraIni(),
+                    reg.safraFim(),
+                    reg.cicloCodigo(),
+                    reg.soloCodigo(),
+                    reg.manejoCodigo(),
+                    reg.portaria()
+            );
+            unicos.put(chave, reg);
+        }
+        return new ArrayList<>(unicos.values());
+    }
+
+    private record ChaveUnicaZarc(
+            Long municipioId,
+            Long culturaCodigoFonteId,
+            Integer safraIni,
+            Integer safraFim,
+            String cicloCodigo,
+            String soloCodigo,
+            String manejoCodigo,
+            String portaria
+    ) {}
 }

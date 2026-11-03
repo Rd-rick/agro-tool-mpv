@@ -2,15 +2,17 @@ package com.figueredo.ricardo.mvp.epagri.infrastructure.adapter.out.persistence;
 
 import com.figueredo.ricardo.mvp.epagri.application.port.out.CotacaoPersistencePort;
 import com.figueredo.ricardo.mvp.epagri.domain.model.CotacaoPrecoRegistro;
-import org.springframework.jdbc.core.BatchPreparedStatementSetter;
+import com.figueredo.ricardo.mvp.epagri.domain.model.FrequenciaCotacao;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class CotacaoJdbcPersistenceAdapter implements CotacaoPersistencePort {
@@ -51,23 +53,42 @@ public class CotacaoJdbcPersistenceAdapter implements CotacaoPersistencePort {
             return;
         }
 
-        jdbcTemplate.batchUpdate(SQL_UPSERT, new BatchPreparedStatementSetter() {
-            @Override
-            public void setValues(PreparedStatement ps, int index) throws SQLException {
-                CotacaoPrecoRegistro reg = lote.get(index);
-                ps.setLong(1, reg.produtoId());
-                ps.setLong(2, reg.pracaId());
-                ps.setDate(3, Date.valueOf(reg.dataCotacao()));
-                ps.setBigDecimal(4, reg.precoMinimo());
-                ps.setBigDecimal(5, reg.precoReferencia());
-                ps.setBigDecimal(6, reg.precoMaximo());
-                ps.setString(7, reg.frequencia().name());
-            }
+        List<CotacaoPrecoRegistro> loteUnico = deduplicarLote(lote);
 
-            @Override
-            public int getBatchSize() {
-                return lote.size();
-            }
-        });
+        jdbcTemplate.batchUpdate(
+                SQL_UPSERT,
+                loteUnico,
+                loteUnico.size(),
+                (ps, reg) -> {
+                    ps.setLong(1, reg.produtoId());
+                    ps.setLong(2, reg.pracaId());
+                    ps.setDate(3, Date.valueOf(reg.dataCotacao()));
+                    ps.setBigDecimal(4, reg.precoMinimo());
+                    ps.setBigDecimal(5, reg.precoReferencia());
+                    ps.setBigDecimal(6, reg.precoMaximo());
+                    ps.setString(7, reg.frequencia().name());
+                }
+        );
     }
+
+    private List<CotacaoPrecoRegistro> deduplicarLote(List<CotacaoPrecoRegistro> lote) {
+        Map<ChaveUnicaCotacao, CotacaoPrecoRegistro> unicos = new LinkedHashMap<>(lote.size());
+        for (CotacaoPrecoRegistro reg : lote) {
+            ChaveUnicaCotacao chave = new ChaveUnicaCotacao(
+                    reg.produtoId(),
+                    reg.pracaId(),
+                    reg.dataCotacao(),
+                    reg.frequencia()
+            );
+            unicos.put(chave, reg);
+        }
+        return new ArrayList<>(unicos.values());
+    }
+
+    private record ChaveUnicaCotacao(
+            Long produtoId,
+            Long pracaId,
+            LocalDate dataCotacao,
+            FrequenciaCotacao frequencia
+    ) {}
 }
