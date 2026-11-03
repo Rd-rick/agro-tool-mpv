@@ -74,4 +74,32 @@ class ZarcRegistroTest {
                 decendios
         ));
     }
+
+    @Test
+    void deveTruncarDescricoesQueExcedamLimiteDoBancoEValidarDecendios() {
+        List<Integer> decendios = Collections.nCopies(36, 30);
+        String manejoLongo = "Descricao de manejo muito longa que ultrapassa cinquenta caracteres no banco";
+
+        ZarcRegistro registro = new ZarcRegistro(
+                1L,
+                2L,
+                2024,
+                2025,
+                "22",
+                null,
+                "14",
+                null,
+                "1",
+                manejoLongo,
+                "Port.120",
+                decendios
+        );
+
+        assertEquals(50, registro.manejoDescricao().length());
+
+        List<Integer> decendiosForaDoIntervalo = Collections.nCopies(36, 150);
+        assertThrows(IllegalArgumentException.class, () -> new ZarcRegistro(
+                1L, 2L, 2024, 2025, "22", null, "14", null, "1", "Sequeiro", "Port.120", decendiosForaDoIntervalo
+        ));
+    }
 }

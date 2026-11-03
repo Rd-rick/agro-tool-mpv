@@ -106,9 +106,9 @@ class ImportarZarcServiceTest {
         when(municipioPort.mapearIbgeParaIdPorUf("SC")).thenReturn(Map.of("4204806", 100L));
         when(culturaFontePort.mapearCodigoOrigemParaIdPorFonte("MAPA_ZARC")).thenReturn(Map.of("12016720000011", 200L));
 
-        String header = "Nome_cultura;SafraIni;SafraFin;Cod_Cultura;Cod_Ciclo;Cod_Solo;geocodigo;UF;municipio;Cod_Clima;Nome_Clima;Cod_Outros_Manejos;Nome_Outros_Manejos;Produtividade;Cod_NM;Cod_Munic;Cod_Meso;Cod_Micro;Portaria;dec1;dec2;dec3;dec4;dec5;dec6;dec7;dec8;dec9;dec10;dec11;dec12;dec13;dec14;dec15;dec16;dec17;dec18;dec19;dec20;dec21;dec22;dec23;dec24;dec25;dec26;dec27;dec28;dec29;dec30;dec31;dec32;dec33;dec34;dec35;dec36\n";
+        String header = "\uFEFFNome_cultura;SafraIni;SafraFin;Cod_Cultura;Cod_Ciclo;Cod_Solo;geocodigo;UF;municipio;Cod_Clima;Nome_Clima;Cod_Outros_Manejos;Nome_Outros_Manejos;Produtividade;Cod_NM;Cod_Munic;Cod_Meso;Cod_Micro;Portaria;dec1;dec2;dec3;dec4;dec5;dec6;dec7;dec8;dec9;dec10;dec11;dec12;dec13;dec14;dec15;dec16;dec17;dec18;dec19;dec20;dec21;dec22;dec23;dec24;dec25;dec26;dec27;dec28;dec29;dec30;dec31;dec32;dec33;dec34;dec35;dec36\n";
         String linhaRS = "Soja;2024;2025;12016720000011;22;14;4316477;RS;Salvador;0;Nao;1;Sequeiro;0;0;001;01;001;Port.1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0\n";
-        String linhaSCValida = "Soja;2024;2025;12016720000011;22;14;4204806;SC;Curitibanos;0;Nao;1;Sequeiro;0;0;009764;03;009;Port.120;20;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;20;20;20;20;20;20;20;20;20\n";
+        String linhaSCValida = "\"Soja\";2024;2025;\"12016720000011\";22;14;\"4204806\";\"SC\";Curitibanos;0;Nao;1;Sequeiro;0;0;009764;03;009;Port.120;20;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;20;20;20;20;20;20;20;20;20\n";
         String linhaSCCulturaDesconhecida = "Outra;2024;2025;99999999999999;22;14;4204806;SC;Curitibanos;0;Nao;1;Sequeiro;0;0;009764;03;009;Port.120;20;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;20;20;20;20;20;20;20;20;20\n";
 
         String csvCompleto = header + linhaRS + linhaSCValida + linhaSCCulturaDesconhecida;

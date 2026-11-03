@@ -129,4 +129,52 @@ class EpagriSaxSheetHandlerTest {
         assertEquals(new BigDecimal("70.00"), reg.precoMaximo());
         assertEquals(FrequenciaCotacao.SEMANAL, reg.frequencia());
     }
+
+    @Test
+    void deveSuportarMesNumericoEMilharFormatadoPadraoAmericanoEBrasileiro() {
+        List<CotacaoPrecoRegistro> registrosSalvos = new ArrayList<>();
+        Map<String, Long> mapaProdutos = Map.of("Soja industrial - sc 60 kg", 10L);
+        Map<String, Long> mapaPracas = Map.of("Oeste", 25L);
+
+        EpagriSaxSheetHandler handler = new EpagriSaxSheetHandler(
+                FrequenciaCotacao.DIARIA,
+                registrosSalvos::addAll,
+                100,
+                mapaProdutos,
+                mapaPracas
+        );
+
+        handler.startRow(0);
+        handler.cell("A1", "Ano", null);
+        handler.cell("B1", "Mês", null);
+        handler.cell("C1", "Dia", null);
+        handler.cell("D1", "Produto", null);
+        handler.cell("E1", "nom_praca", null);
+        handler.cell("F1", "Val. Minimo", null);
+        handler.cell("G1", "Val. Mais Comum", null);
+        handler.cell("H1", "Val. Maximo", null);
+        handler.cell("I1", "Grupo Produto", null);
+        handler.endRow(0);
+
+        handler.startRow(1);
+        handler.cell("A2", "2026", null);
+        handler.cell("B2", "03", null);
+        handler.cell("C2", "15", null);
+        handler.cell("D2", "Soja industrial - sc 60 kg", null);
+        handler.cell("E2", "Oeste", null);
+        handler.cell("F2", "1.100,25", null);
+        handler.cell("G2", "1,250.50", null);
+        handler.cell("H2", "1.300,75", null);
+        handler.cell("I2", "Grãos", null);
+        handler.endRow(1);
+
+        handler.finalizar();
+
+        assertEquals(1, handler.getTotalProcessados());
+        CotacaoPrecoRegistro reg = registrosSalvos.getFirst();
+        assertEquals(LocalDate.of(2026, 3, 15), reg.dataCotacao());
+        assertEquals(new BigDecimal("1100.25"), reg.precoMinimo());
+        assertEquals(new BigDecimal("1250.50"), reg.precoReferencia());
+        assertEquals(new BigDecimal("1300.75"), reg.precoMaximo());
+    }
 }
