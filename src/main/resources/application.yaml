@@ -32,3 +32,10 @@ app:
       safras-alvo:
         - "2024/2025"
         - "2025/2026"
+    epagri:
+      enabled: ${EPAGRI_JOB_ENABLED:true}
+      cron: "${EPAGRI_JOB_CRON:0 30 3 * * ?}"
+      batch-size: 1000
+      pagina-precos-url: "${EPAGRI_PAGINA_PRECOS_URL:https://cepa.epagri.sc.gov.br/index.php/mercado-agricola/}"
+      url-diaria-padrao: "${EPAGRI_URL_DIARIA:https://docweb.epagri.sc.gov.br/website_cepa/precos/Historico_precos_diario.xlsx}"
+      url-semanal-padrao: "${EPAGRI_URL_SEMANAL:https://docweb.epagri.sc.gov.br/website_cepa/precos/Historico_precos_semanal.xlsx}"
