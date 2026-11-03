@@ -22,18 +22,30 @@ public class EpagriSaxSheetHandler implements XSSFSheetXMLHandler.SheetContentsH
 
     private static final Map<String, Integer> MESES = Map.ofEntries(
             Map.entry("janeiro", 1),
+            Map.entry("jan", 1),
             Map.entry("fevereiro", 2),
+            Map.entry("fev", 2),
             Map.entry("marco", 3),
             Map.entry("março", 3),
+            Map.entry("mar", 3),
             Map.entry("abril", 4),
+            Map.entry("abr", 4),
             Map.entry("maio", 5),
+            Map.entry("mai", 5),
             Map.entry("junho", 6),
+            Map.entry("jun", 6),
             Map.entry("julho", 7),
+            Map.entry("jul", 7),
             Map.entry("agosto", 8),
+            Map.entry("ago", 8),
             Map.entry("setembro", 9),
+            Map.entry("set", 9),
             Map.entry("outubro", 10),
+            Map.entry("out", 10),
             Map.entry("novembro", 11),
-            Map.entry("dezembro", 12)
+            Map.entry("nov", 11),
+            Map.entry("dezembro", 12),
+            Map.entry("dez", 12)
     );
 
     private final FrequenciaCotacao frequencia;
@@ -116,33 +128,48 @@ public class EpagriSaxSheetHandler implements XSSFSheetXMLHandler.SheetContentsH
     }
 
     private void tentarIdentificarCabecalho() {
-        boolean temProduto = false;
-        boolean temPraca = false;
+        int candAno = -1;
+        int candMes = -1;
+        int candDia = -1;
+        int candProduto = -1;
+        int candPraca = -1;
+        int candMin = -1;
+        int candRef = -1;
+        int candMax = -1;
 
         for (Map.Entry<Integer, String> entry : linhaAtual.entrySet()) {
             String val = normalizarTexto(entry.getValue());
-            if (val.contains("produto")) {
-                colProduto = entry.getKey();
-                temProduto = true;
-            } else if (val.contains("praca") || val.contains("nom_praca")) {
-                colPraca = entry.getKey();
-                temPraca = true;
-            } else if (val.contains("ano")) {
-                colAno = entry.getKey();
-            } else if (val.contains("mes")) {
-                colMes = entry.getKey();
-            } else if (val.equals("dia")) {
-                colDia = entry.getKey();
-            } else if (val.contains("minimo") || val.contains("val. minimo")) {
-                colMin = entry.getKey();
-            } else if (val.contains("comum") || val.contains("referencia") || val.contains("val. mais comum")) {
-                colRef = entry.getKey();
-            } else if (val.contains("maximo") || val.contains("val. maximo")) {
-                colMax = entry.getKey();
+            if (val.isEmpty()) {
+                continue;
+            }
+            if (candProduto < 0 && (val.equals("produto") || val.contains("produto"))) {
+                candProduto = entry.getKey();
+            } else if (candPraca < 0 && (val.contains("praca") || val.contains("nom_praca"))) {
+                candPraca = entry.getKey();
+            } else if (candAno < 0 && val.contains("ano")) {
+                candAno = entry.getKey();
+            } else if (candMes < 0 && val.contains("mes")) {
+                candMes = entry.getKey();
+            } else if (candDia < 0 && val.equals("dia")) {
+                candDia = entry.getKey();
+            } else if (candMin < 0 && (val.contains("minimo") || val.contains("val. minimo"))) {
+                candMin = entry.getKey();
+            } else if (candRef < 0 && (val.contains("comum") || val.contains("referencia") || val.contains("val. mais comum"))) {
+                candRef = entry.getKey();
+            } else if (candMax < 0 && (val.contains("maximo") || val.contains("val. maximo"))) {
+                candMax = entry.getKey();
             }
         }
 
-        if (temProduto && temPraca && colRef >= 0 && colAno >= 0 && colMes >= 0 && colDia >= 0) {
+        if (candProduto >= 0 && candPraca >= 0 && candRef >= 0 && candAno >= 0 && candMes >= 0 && candDia >= 0) {
+            colAno = candAno;
+            colMes = candMes;
+            colDia = candDia;
+            colProduto = candProduto;
+            colPraca = candPraca;
+            colMin = candMin;
+            colRef = candRef;
+            colMax = candMax;
             cabecalhoEncontrado = true;
         }
     }
@@ -203,9 +230,8 @@ public class EpagriSaxSheetHandler implements XSSFSheetXMLHandler.SheetContentsH
     private LocalDate parseData(String anoStr, String mesStr, String diaStr) {
         try {
             int ano = Integer.parseInt(anoStr.trim());
-            String mesLimpo = normalizarTexto(mesStr);
-            Integer mes = MESES.get(mesLimpo);
-            if (mes == null) {
+            int mes = extrairMes(mesStr);
+            if (mes < 1 || mes > 12) {
                 return null;
             }
             int dia = Integer.parseInt(diaStr.trim());
@@ -215,14 +241,38 @@ public class EpagriSaxSheetHandler implements XSSFSheetXMLHandler.SheetContentsH
         }
     }
 
+    private int extrairMes(String mesStr) {
+        String mesLimpo = normalizarTexto(mesStr);
+        Integer mesPorNome = MESES.get(mesLimpo);
+        if (mesPorNome != null) {
+            return mesPorNome;
+        }
+        try {
+            return Integer.parseInt(mesLimpo);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
     private BigDecimal parseBigDecimal(String valorStr) {
         if (valorStr == null || valorStr.isBlank()) {
             return null;
         }
         try {
-            String normalizado = valorStr.trim().replace(".", "").replace(',', '.');
-            if (valorStr.contains(".") && !valorStr.contains(",")) {
-                normalizado = valorStr.trim();
+            String limpo = valorStr.trim();
+            int ultimoPonto = limpo.lastIndexOf('.');
+            int ultimaVirgula = limpo.lastIndexOf(',');
+            String normalizado;
+            if (ultimoPonto >= 0 && ultimaVirgula >= 0) {
+                if (ultimaVirgula > ultimoPonto) {
+                    normalizado = limpo.replace(".", "").replace(',', '.');
+                } else {
+                    normalizado = limpo.replace(",", "");
+                }
+            } else if (ultimaVirgula >= 0) {
+                normalizado = limpo.replace(',', '.');
+            } else {
+                normalizado = limpo;
             }
             return new BigDecimal(normalizado);
         } catch (Exception e) {

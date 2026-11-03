@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 @Service
 public class ImportarZarcService implements ImportarZarcUseCase {
@@ -55,7 +56,7 @@ public class ImportarZarcService implements ImportarZarcUseCase {
         this.municipioPort = municipioPort;
         this.culturaFontePort = culturaFontePort;
         this.safrasAlvo = safrasAlvo;
-        this.batchSize = batchSize;
+        this.batchSize = batchSize > 0 ? batchSize : 1000;
     }
 
     @Override
@@ -90,6 +91,10 @@ public class ImportarZarcService implements ImportarZarcUseCase {
 
     @Override
     public ResultadoImportacao importarSafra(String safraNome) {
+        if (safraNome == null || safraNome.isBlank()) {
+            return new ResultadoImportacao(0, 0, List.of("Safra inválida"));
+        }
+
         List<RecursoZarc> recursos = datasetClientPort.buscarRecursosDisponiveis();
         Optional<RecursoZarc> recursoOpt = encontrarRecursoPorSafra(recursos, safraNome);
 
@@ -112,7 +117,7 @@ public class ImportarZarcService implements ImportarZarcUseCase {
         String original = safra.trim();
 
         return recursos.stream()
-                .filter(r -> "CSV".equalsIgnoreCase(r.formato()) || (r.url() != null && r.url().endsWith(".csv")))
+                .filter(r -> "CSV".equalsIgnoreCase(r.formato()) || (r.url() != null && r.url().toLowerCase().endsWith(".csv")))
                 .filter(r -> r.nome() != null && (r.nome().contains(original) || r.nome().contains(normalizada) || (r.url() != null && r.url().contains(normalizada))))
                 .findFirst();
     }
@@ -150,7 +155,7 @@ public class ImportarZarcService implements ImportarZarcUseCase {
 
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.isBlank() || !line.contains(";" + UF_ALVO + ";")) {
+                if (line.isBlank() || !contemTokenUf(line)) {
                     continue;
                 }
 
@@ -159,16 +164,16 @@ public class ImportarZarcService implements ImportarZarcUseCase {
                 if (registro != null) {
                     lote.add(registro);
                     if (lote.size() >= batchSize) {
-                        persistencePort.salvarLote(lote);
-                        totalProcessados += lote.size();
+                        int salvos = persistencePort.salvarLote(lote);
+                        totalProcessados += salvos > 0 ? salvos : lote.size();
                         lote.clear();
                     }
                 }
             }
 
             if (!lote.isEmpty()) {
-                persistencePort.salvarLote(lote);
-                totalProcessados += lote.size();
+                int salvos = persistencePort.salvarLote(lote);
+                totalProcessados += salvos > 0 ? salvos : lote.size();
                 lote.clear();
             }
 
@@ -184,11 +189,23 @@ public class ImportarZarcService implements ImportarZarcUseCase {
         }
     }
 
+    private boolean contemTokenUf(String line) {
+        String upper = line.toUpperCase();
+        return upper.contains(";" + UF_ALVO + ";")
+                || upper.contains(";\"" + UF_ALVO + "\";")
+                || upper.startsWith(UF_ALVO + ";")
+                || upper.startsWith("\"" + UF_ALVO + "\";")
+                || upper.endsWith(";" + UF_ALVO)
+                || upper.endsWith(";\"" + UF_ALVO + "\"");
+    }
+
     private Map<String, Integer> mapearColunas(String headerLine) {
         Map<String, Integer> map = new HashMap<>();
-        String[] cols = headerLine.split(";");
-        for (int i = 0; i < cols.length; i++) {
-            map.put(cols[i].trim().toLowerCase(), i);
+        String limpa = headerLine.replace("\uFEFF", "");
+        String[] cols = limpa.split(";");
+        int idx = 0;
+        for (String col : cols) {
+            map.put(limparValorCsv(col).toLowerCase(), idx++);
         }
         return map;
     }
@@ -228,12 +245,16 @@ public class ImportarZarcService implements ImportarZarcUseCase {
             return null;
         }
 
-        List<Integer> decendios = new ArrayList<>(36);
-        for (int d = 1; d <= 36; d++) {
-            String valorDec = obterValorColuna(colunas, indices, "dec" + d);
-            Integer risco = parseInteger(valorDec);
-            decendios.add(risco != null ? risco : 0);
-        }
+        List<Integer> decendios = IntStream.rangeClosed(1, 36)
+                .mapToObj(d -> {
+                    String valorDec = obterValorColuna(colunas, indices, "dec" + d);
+                    Integer risco = parseInteger(valorDec);
+                    if (risco == null || risco < 0 || risco > 100) {
+                        return 0;
+                    }
+                    return risco;
+                })
+                .toList();
 
         return new ZarcRegistro(
                 municipioId,
@@ -256,7 +277,18 @@ public class ImportarZarcService implements ImportarZarcUseCase {
         if (idx == null || idx >= colunas.length) {
             return "";
         }
-        return colunas[idx].trim();
+        return limparValorCsv(colunas[idx]);
+    }
+
+    private String limparValorCsv(String valor) {
+        if (valor == null) {
+            return "";
+        }
+        String trimmed = valor.trim();
+        if (trimmed.length() >= 2 && trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
+            return trimmed.substring(1, trimmed.length() - 1).trim();
+        }
+        return trimmed;
     }
 
     private Integer parseInteger(String val) {
