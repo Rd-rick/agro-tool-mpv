@@ -1,6 +1,5 @@
 package com.figueredo.ricardo.mvp.zarc.infrastructure.adapter.out.persistence.entity;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -24,13 +23,10 @@ public class MunicipioEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "codigo_ibge", nullable = false, length = 7, unique = true)
     private String codigoIbge;
 
-    @Column(nullable = false, length = 150)
     private String nome;
 
-    @Column(nullable = false, length = 2)
     @JdbcTypeCode(Types.CHAR)
     private String uf;
 }

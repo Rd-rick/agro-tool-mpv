@@ -17,8 +17,8 @@ public class ControleCarga {
 
     public ControleCarga(String fonte, String identificadorRecurso, String ultimoModificadoFonte) {
         this.fonte = Objects.requireNonNull(fonte, "fonte é obrigatória");
-        this.identificadorRecurso = Objects.requireNonNull(identificadorRecurso, "identificadorRecurso é obrigatório");
-        this.ultimoModificadoFonte = ultimoModificadoFonte;
+        this.identificadorRecurso = truncar(Objects.requireNonNull(identificadorRecurso, "identificadorRecurso é obrigatório"), 150);
+        this.ultimoModificadoFonte = truncar(ultimoModificadoFonte, 100);
         this.status = StatusCarga.EM_ANDAMENTO;
         this.totalRegistrosProcessados = 0;
         this.iniciadoEm = Instant.now();
@@ -28,20 +28,29 @@ public class ControleCarga {
                          StatusCarga status, Integer totalRegistrosProcessados, String mensagemErro,
                          Instant iniciadoEm, Instant finalizadoEm) {
         this.id = id;
-        this.fonte = fonte;
-        this.identificadorRecurso = identificadorRecurso;
-        this.ultimoModificadoFonte = ultimoModificadoFonte;
-        this.status = status;
-        this.totalRegistrosProcessados = totalRegistrosProcessados;
+        this.fonte = Objects.requireNonNull(fonte, "fonte é obrigatória");
+        this.identificadorRecurso = truncar(Objects.requireNonNull(identificadorRecurso, "identificadorRecurso é obrigatório"), 150);
+        this.ultimoModificadoFonte = truncar(ultimoModificadoFonte, 100);
+        this.status = Objects.requireNonNull(status, "status é obrigatório");
+        this.totalRegistrosProcessados = totalRegistrosProcessados != null ? totalRegistrosProcessados : 0;
         this.mensagemErro = mensagemErro;
-        this.iniciadoEm = iniciadoEm;
+        this.iniciadoEm = Objects.requireNonNull(iniciadoEm, "iniciadoEm é obrigatório");
         this.finalizadoEm = finalizadoEm;
     }
 
     public void marcarSucesso(int totalProcessados) {
         this.status = StatusCarga.SUCESSO;
         this.totalRegistrosProcessados = totalProcessados;
+        this.mensagemErro = null;
         this.finalizadoEm = Instant.now();
+    }
+
+    private static String truncar(String valor, int limite) {
+        if (valor == null) {
+            return null;
+        }
+        String limpo = valor.trim();
+        return limpo.length() > limite ? limpo.substring(0, limite) : limpo;
     }
 
     public void marcarErro(String mensagem) {

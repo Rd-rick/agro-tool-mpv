@@ -17,8 +17,8 @@ public class ControleCargaEpagri {
 
     public ControleCargaEpagri(String fonte, String identificadorRecurso, String ultimoModificadoFonte) {
         this.fonte = Objects.requireNonNull(fonte, "fonte não pode ser nula");
-        this.identificadorRecurso = Objects.requireNonNull(identificadorRecurso, "identificadorRecurso não pode ser nulo");
-        this.ultimoModificadoFonte = ultimoModificadoFonte;
+        this.identificadorRecurso = truncar(Objects.requireNonNull(identificadorRecurso, "identificadorRecurso não pode ser nulo"), 150);
+        this.ultimoModificadoFonte = truncar(ultimoModificadoFonte, 100);
         this.status = StatusCarga.EM_ANDAMENTO;
         this.totalRegistrosProcessados = 0;
         this.iniciadoEm = OffsetDateTime.now();
@@ -37,13 +37,21 @@ public class ControleCargaEpagri {
     ) {
         this.id = id;
         this.fonte = Objects.requireNonNull(fonte, "fonte não pode ser nula");
-        this.identificadorRecurso = Objects.requireNonNull(identificadorRecurso, "identificadorRecurso não pode ser nulo");
-        this.ultimoModificadoFonte = ultimoModificadoFonte;
+        this.identificadorRecurso = truncar(Objects.requireNonNull(identificadorRecurso, "identificadorRecurso não pode ser nulo"), 150);
+        this.ultimoModificadoFonte = truncar(ultimoModificadoFonte, 100);
         this.status = Objects.requireNonNull(status, "status não pode ser nulo");
         this.totalRegistrosProcessados = totalRegistrosProcessados;
         this.mensagemErro = mensagemErro;
         this.iniciadoEm = Objects.requireNonNull(iniciadoEm, "iniciadoEm não pode ser nulo");
         this.finalizadoEm = finalizadoEm;
+    }
+
+    private static String truncar(String valor, int limite) {
+        if (valor == null) {
+            return null;
+        }
+        String limpo = valor.trim();
+        return limpo.length() > limite ? limpo.substring(0, limite) : limpo;
     }
 
     public void marcarSucesso(int totalRegistrosProcessados) {
