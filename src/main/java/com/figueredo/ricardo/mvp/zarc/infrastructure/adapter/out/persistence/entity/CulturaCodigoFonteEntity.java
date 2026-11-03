@@ -21,18 +21,13 @@ public class CulturaCodigoFonteEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "cultura_id", nullable = false)
     private Long culturaId;
 
-    @Column(nullable = false, length = 30)
     private String fonte;
 
-    @Column(name = "codigo_origem", nullable = false, length = 50)
     private String codigoOrigem;
 
-    @Column(name = "nome_origem", length = 150)
     private String nomeOrigem;
 
-    @Column(nullable = false)
     private Boolean ativo;
 }

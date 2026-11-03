@@ -23,27 +23,19 @@ public class ControleCargaEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 50)
     private String fonte;
 
-    @Column(name = "identificador_recurso", nullable = false, length = 150)
     private String identificadorRecurso;
 
-    @Column(name = "ultimo_modificado_fonte", length = 100)
     private String ultimoModificadoFonte;
 
-    @Column(nullable = false, length = 30)
     private String status;
 
-    @Column(name = "total_registros_processados", nullable = false)
     private Integer totalRegistrosProcessados;
 
-    @Column(name = "mensagem_erro", columnDefinition = "TEXT")
     private String mensagemErro;
 
-    @Column(name = "iniciado_em", nullable = false)
     private Instant iniciadoEm;
 
-    @Column(name = "finalizado_em")
     private Instant finalizadoEm;
 }
