@@ -28,6 +28,7 @@ app:
       enabled: ${ZARC_JOB_ENABLED:true}
       cron: "${ZARC_JOB_CRON:0 0 3 * * ?}"
       batch-size: 1000
+      max-download-mb: ${ZARC_MAX_DOWNLOAD_MB:500}
       ckan-package-url: "${ZARC_CKAN_URL:https://dados.agricultura.gov.br/api/3/action/package_show?id=tabua-de-risco-zoneamento-agricola-de-risco-climatico}"
       safras-alvo:
         - "2024/2025"
@@ -36,6 +37,7 @@ app:
       enabled: ${EPAGRI_JOB_ENABLED:true}
       cron: "${EPAGRI_JOB_CRON:0 30 3 * * ?}"
       batch-size: 1000
+      max-download-mb: ${EPAGRI_MAX_DOWNLOAD_MB:200}
       pagina-precos-url: "${EPAGRI_PAGINA_PRECOS_URL:https://cepa.epagri.sc.gov.br/index.php/mercado-agricola/}"
       url-diaria-padrao: "${EPAGRI_URL_DIARIA:https://docweb.epagri.sc.gov.br/website_cepa/precos/Historico_precos_diario.xlsx}"
       url-semanal-padrao: "${EPAGRI_URL_SEMANAL:https://docweb.epagri.sc.gov.br/website_cepa/precos/Historico_precos_semanal.xlsx}"

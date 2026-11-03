@@ -18,17 +18,19 @@ import org.springframework.stereotype.Component;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -42,20 +44,25 @@ public class EpagriWebScraperClientAdapter implements EpagriClientPort {
 
     private static final Pattern PATTERN_URL_DIARIO = Pattern.compile("href=\"([^\"]*Historico_precos_diario[^\"]*\\.xlsx)\"", Pattern.CASE_INSENSITIVE);
     private static final Pattern PATTERN_URL_SEMANAL = Pattern.compile("href=\"([^\"]*Historico_precos_semanal[^\"]*\\.xlsx)\"", Pattern.CASE_INSENSITIVE);
+    private static final long BYTES_PER_MB = 1024L * 1024L;
+    private static final String DOMINIO_EPAGRI = "epagri.sc.gov.br";
 
     private final HttpClient httpClient;
     private final String paginaPrecosUrl;
     private final String urlDiariaPadrao;
     private final String urlSemanalPadrao;
+    private final long maxDownloadBytes;
 
     public EpagriWebScraperClientAdapter(
             @Value("${app.jobs.epagri.pagina-precos-url:https://cepa.epagri.sc.gov.br/index.php/mercado-agricola/}") String paginaPrecosUrl,
             @Value("${app.jobs.epagri.url-diaria-padrao:https://docweb.epagri.sc.gov.br/website_cepa/precos/Historico_precos_diario.xlsx}") String urlDiariaPadrao,
-            @Value("${app.jobs.epagri.url-semanal-padrao:https://docweb.epagri.sc.gov.br/website_cepa/precos/Historico_precos_semanal.xlsx}") String urlSemanalPadrao
+            @Value("${app.jobs.epagri.url-semanal-padrao:https://docweb.epagri.sc.gov.br/website_cepa/precos/Historico_precos_semanal.xlsx}") String urlSemanalPadrao,
+            @Value("${app.jobs.epagri.max-download-mb:200}") long maxDownloadMb
     ) {
         this.paginaPrecosUrl = paginaPrecosUrl;
         this.urlDiariaPadrao = urlDiariaPadrao;
         this.urlSemanalPadrao = urlSemanalPadrao;
+        this.maxDownloadBytes = (maxDownloadMb > 0 ? maxDownloadMb : 200L) * BYTES_PER_MB;
         this.httpClient = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .connectTimeout(Duration.ofSeconds(20))
@@ -68,8 +75,9 @@ public class EpagriWebScraperClientAdapter implements EpagriClientPort {
         String urlSemanal = urlSemanalPadrao;
 
         try {
+            URI uriPagina = validarEResolverUriEpagri(paginaPrecosUrl);
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(paginaPrecosUrl))
+                    .uri(uriPagina)
                     .timeout(Duration.ofSeconds(30))
                     .header("User-Agent", "AgroTool-EpagriClient/1.0")
                     .GET()
@@ -79,14 +87,17 @@ public class EpagriWebScraperClientAdapter implements EpagriClientPort {
             if (response.statusCode() == 200 && response.body() != null) {
                 Matcher matcherDiario = PATTERN_URL_DIARIO.matcher(response.body());
                 if (matcherDiario.find()) {
-                    urlDiaria = matcherDiario.group(1).trim();
+                    urlDiaria = resolverUrlExtraidaOuPadrao(matcherDiario.group(1), uriPagina, urlDiariaPadrao);
                 }
 
                 Matcher matcherSemanal = PATTERN_URL_SEMANAL.matcher(response.body());
                 if (matcherSemanal.find()) {
-                    urlSemanal = matcherSemanal.group(1).trim();
+                    urlSemanal = resolverUrlExtraidaOuPadrao(matcherSemanal.group(1), uriPagina, urlSemanalPadrao);
                 }
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Scraping da página Epagri interrompido, utilizando URLs padrão");
         } catch (Exception e) {
             log.warn("Não foi possível realizar scraping na página de preços da Epagri ({}), utilizando URLs padrão configuradas: {}",
                     paginaPrecosUrl, e.getMessage());
@@ -106,8 +117,9 @@ public class EpagriWebScraperClientAdapter implements EpagriClientPort {
     @Override
     public Optional<String> obterUltimoModificado(String urlArquivo) {
         try {
+            URI uri = validarEResolverUriEpagri(urlArquivo);
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(urlArquivo))
+                    .uri(uri)
                     .timeout(Duration.ofSeconds(15))
                     .header("User-Agent", "AgroTool-EpagriClient/1.0")
                     .method("HEAD", HttpRequest.BodyPublishers.noBody())
@@ -121,6 +133,9 @@ public class EpagriWebScraperClientAdapter implements EpagriClientPort {
                 }
                 return response.headers().firstValue("ETag");
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Consulta de cabeçalhos interrompida para {}", urlArquivo);
         } catch (Exception e) {
             log.warn("Falha ao obter cabeçalhos de última modificação para {}: {}", urlArquivo, e.getMessage());
         }
@@ -138,10 +153,11 @@ public class EpagriWebScraperClientAdapter implements EpagriClientPort {
     ) {
         Path tempFile = null;
         try {
+            URI uri = validarEResolverUriEpagri(urlArquivo);
             tempFile = Files.createTempFile("epagri_cotacoes_", ".xlsx");
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(urlArquivo))
+                    .uri(uri)
                     .timeout(Duration.ofMinutes(5))
                     .header("User-Agent", "AgroTool-EpagriClient/1.0")
                     .GET()
@@ -154,7 +170,7 @@ public class EpagriWebScraperClientAdapter implements EpagriClientPort {
                     throw new IllegalStateException("Falha ao baixar planilha da Epagri. Código HTTP: " + response.statusCode());
                 }
 
-                Files.copy(is, tempFile, StandardCopyOption.REPLACE_EXISTING);
+                copiarComLimite(is, tempFile, maxDownloadBytes);
             }
 
             int totalLinhasProcessadas = 0;
@@ -187,6 +203,9 @@ public class EpagriWebScraperClientAdapter implements EpagriClientPort {
             }
 
             return totalLinhasProcessadas;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Download/processamento da planilha Epagri foi interrompido: " + urlArquivo, e);
         } catch (Exception e) {
             throw new RuntimeException("Erro durante streaming e processamento do arquivo " + urlArquivo + ": " + e.getMessage(), e);
         } finally {
@@ -196,6 +215,54 @@ public class EpagriWebScraperClientAdapter implements EpagriClientPort {
                 } catch (Exception e) {
                     log.warn("Não foi possível excluir arquivo temporário: {}", tempFile, e);
                 }
+            }
+        }
+    }
+
+    private String resolverUrlExtraidaOuPadrao(String urlExtraida, URI uriBase, String urlPadrao) {
+        if (urlExtraida == null || urlExtraida.isBlank()) {
+            return urlPadrao;
+        }
+        try {
+            URI resolvida = uriBase.resolve(urlExtraida.trim());
+            validarUriEpagri(resolvida);
+            return resolvida.toString();
+        } catch (Exception e) {
+            log.warn("URL extraída do HTML foi rejeitada pela validação de segurança ({}), mantendo URL padrão: {}",
+                    urlExtraida, e.getMessage());
+            return urlPadrao;
+        }
+    }
+
+    private URI validarEResolverUriEpagri(String url) {
+        if (url == null || url.isBlank()) {
+            throw new IllegalArgumentException("URL da Epagri não pode ser vazia");
+        }
+        URI uri = URI.create(url.trim());
+        validarUriEpagri(uri);
+        return uri;
+    }
+
+    private void validarUriEpagri(URI uri) {
+        String scheme = uri.getScheme() != null ? uri.getScheme().toLowerCase(Locale.ROOT) : "";
+        String host = uri.getHost() != null ? uri.getHost().toLowerCase(Locale.ROOT) : "";
+        boolean hostValido = host.equals(DOMINIO_EPAGRI) || host.endsWith("." + DOMINIO_EPAGRI);
+        if (!"https".equals(scheme) || !hostValido) {
+            throw new IllegalArgumentException("URL fora do domínio HTTPS oficial da Epagri: " + uri);
+        }
+    }
+
+    private void copiarComLimite(InputStream is, Path destino, long limiteBytes) throws IOException {
+        try (OutputStream os = Files.newOutputStream(destino)) {
+            byte[] buffer = new byte[8192];
+            long totalLido = 0;
+            int lidos;
+            while ((lidos = is.read(buffer)) != -1) {
+                totalLido += lidos;
+                if (totalLido > limiteBytes) {
+                    throw new IllegalStateException("Arquivo excede o limite máximo permitido de " + limiteBytes + " bytes");
+                }
+                os.write(buffer, 0, lidos);
             }
         }
     }
