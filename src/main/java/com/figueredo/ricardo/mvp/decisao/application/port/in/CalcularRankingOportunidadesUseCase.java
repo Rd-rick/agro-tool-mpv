@@ -1,6 +1,10 @@
 package com.figueredo.ricardo.mvp.decisao.application.port.in;
 
 import com.figueredo.ricardo.mvp.decisao.domain.model.RankingOportunidadesResultado;
+import com.figueredo.ricardo.mvp.zarc.domain.model.PeriodoPlantioMeses;
+import com.figueredo.ricardo.mvp.zarc.domain.model.TipoSoloZarc;
+
+import java.util.Objects;
 
 public interface CalcularRankingOportunidadesUseCase {
 
@@ -12,6 +16,23 @@ public interface CalcularRankingOportunidadesUseCase {
             Integer safraFim
     ) {
         return calcularRankingPorMunicipioESafra(new FiltroRankingOportunidades(codigoIbge, safraIni, safraFim));
+    }
+
+    default RankingOportunidadesResultado calcularRankingPorMunicipioEPeriodo(
+            String codigoIbge,
+            PeriodoPlantioMeses periodo
+    ) {
+        return calcularRankingPorMunicipioESafra(new FiltroRankingOportunidades(codigoIbge, null, null));
+    }
+
+    default RankingOportunidadesResultado calcularRankingPorMunicipioPeriodoESolo(
+            String codigoIbge,
+            PeriodoPlantioMeses periodo,
+            TipoSoloZarc tipoSolo
+    ) {
+        Objects.requireNonNull(periodo, "periodo é obrigatório");
+        Objects.requireNonNull(tipoSolo, "tipoSolo é obrigatório");
+        return calcularRankingPorMunicipioEPeriodo(codigoIbge, periodo);
     }
 
     record FiltroRankingOportunidades(

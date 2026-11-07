@@ -15,7 +15,9 @@ import com.figueredo.ricardo.mvp.zarc.domain.model.CicloZoneamento;
 import com.figueredo.ricardo.mvp.zarc.domain.model.CulturaZoneamentoConsolidado;
 import com.figueredo.ricardo.mvp.zarc.domain.model.Municipio;
 import com.figueredo.ricardo.mvp.zarc.domain.model.PeriodoDecendio;
+import com.figueredo.ricardo.mvp.zarc.domain.model.PeriodoPlantioMeses;
 import com.figueredo.ricardo.mvp.zarc.domain.model.SoloZoneamento;
+import com.figueredo.ricardo.mvp.zarc.domain.model.TipoSoloZarc;
 import com.figueredo.ricardo.mvp.zarc.domain.model.ZoneamentoMunicipioResultado;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -171,6 +174,146 @@ class CalcularRankingOportunidadesServiceTest {
         assertEquals(2, segundo.posicaoRanking());
         assertEquals("Feijão", segundo.nomeCultura());
         assertTrue(primeiro.notaFinal() > segundo.notaFinal());
+        assertEquals("Soja", ranking.melhorOportunidade().nomeCultura());
+    }
+
+    @Test
+    void deveCalcularRankingComPeriodoESoloObrigatoriosERecomendarMelhorPeriodoPorCultura() {
+        String codigoIbge = "4204806";
+        PeriodoPlantioMeses periodo = new PeriodoPlantioMeses(YearMonth.of(2025, 1), YearMonth.of(2025, 2));
+        Municipio curitibanos = new Municipio(
+                "Curitibanos",
+                "SC",
+                codigoIbge,
+                7L,
+                "Praça regional atribuída: Meio Oeste"
+        );
+
+        CulturaZoneamentoConsolidado sojaZarc = new CulturaZoneamentoConsolidado(
+                1L,
+                "Soja",
+                "Glycine max",
+                "GRAOS",
+                List.of("Soja"),
+                20,
+                Set.of(20, 30),
+                List.of(
+                        PeriodoDecendio.deDecendio(1, Set.of(20)),
+                        PeriodoDecendio.deDecendio(2, Set.of(30))
+                ),
+                List.of(SoloZoneamento.deTipoSoloZarc(TipoSoloZarc.SOLO_TEXTURA_MEDIA)),
+                List.of(new CicloZoneamento("1", "Grupo I")),
+                List.of("Portaria Soja"),
+                PeriodoDecendio.deDecendio(1, Set.of(20)),
+                "O melhor período de plantio é de 01 a 10 de Janeiro (risco de 20%) para Solo de textura média"
+        );
+
+        when(consultarZoneamentoUseCase.consultarAptasPorMunicipioPeriodoESolo(
+                codigoIbge,
+                periodo,
+                TipoSoloZarc.SOLO_TEXTURA_MEDIA
+        )).thenReturn(new ZoneamentoMunicipioResultado(
+                curitibanos,
+                2025,
+                2026,
+                List.of(sojaZarc)
+        ));
+
+        LocalDate dataCotacao = LocalDate.of(2026, 10, 30);
+        ProdutoMercadoAnalise sojaProduto = criarProdutoAnalise(
+                10L,
+                "Soja industrial",
+                new BigDecimal("125.00"),
+                new BigDecimal("4.20"),
+                new BigDecimal("8.50"),
+                new BigDecimal("11.00"),
+                dataCotacao,
+                false,
+                "Meio Oeste"
+        );
+
+        when(consultarMercadoUseCase.consultarMercadoPorMunicipioECulturas(codigoIbge, List.of(1L)))
+                .thenReturn(List.of(new CulturaMercadoResultado(1L, "Soja", List.of(sojaProduto))));
+        when(historicoPamPort.buscarUltimoHistoricoPamPorMunicipioECulturas(codigoIbge, List.of(1L)))
+                .thenReturn(Map.of(1L, new HistoricoPamCultura(1L, true, 2025, 15000, 57000, 3800)));
+
+        RankingOportunidadesResultado ranking = service.calcularRankingPorMunicipioPeriodoESolo(
+                codigoIbge,
+                periodo,
+                TipoSoloZarc.SOLO_TEXTURA_MEDIA
+        );
+
+        assertEquals(1, ranking.oportunidades().size());
+        assertEquals("Soja", ranking.melhorOportunidade().nomeCultura());
+        assertEquals(
+                "O melhor período de plantio é de 01 a 10 de Janeiro (risco de 20%) para Solo de textura média",
+                ranking.melhorOportunidade().recomendacaoMelhorPeriodo()
+        );
+    }
+
+    @Test
+    void deveIncluirCulturasComDecendioNoPeriodoConsultadoECalcularPontuacaoNoRanking() {
+        String codigoIbge = "4204806";
+        PeriodoPlantioMeses periodo = new PeriodoPlantioMeses(YearMonth.of(2025, 11), YearMonth.of(2026, 2));
+        Municipio curitibanos = new Municipio(
+                "Curitibanos",
+                "SC",
+                codigoIbge,
+                7L,
+                "Praça regional atribuída: Meio Oeste"
+        );
+
+        CulturaZoneamentoConsolidado sojaComDecendioNoPeriodo = new CulturaZoneamentoConsolidado(
+                1L,
+                "Soja",
+                "Glycine max",
+                "GRAOS",
+                List.of("Soja"),
+                20,
+                Set.of(20),
+                List.of(
+                        PeriodoDecendio.deDecendio(34, Set.of(20)),
+                        PeriodoDecendio.deDecendio(1, Set.of(20))
+                ),
+                List.of(new SoloZoneamento("2", "Tipo 2")),
+                List.of(new CicloZoneamento("1", "Grupo I")),
+                List.of("Portaria Soja")
+        );
+
+        when(consultarZoneamentoUseCase.consultarAptasPorMunicipioEPeriodo(codigoIbge, periodo))
+                .thenReturn(new ZoneamentoMunicipioResultado(
+                        curitibanos,
+                        2025,
+                        2026,
+                        List.of(sojaComDecendioNoPeriodo)
+                ));
+
+        LocalDate dataCotacao = LocalDate.of(2026, 10, 30);
+        ProdutoMercadoAnalise sojaProduto = criarProdutoAnalise(
+                10L,
+                "Soja industrial",
+                new BigDecimal("125.00"),
+                new BigDecimal("4.20"),
+                new BigDecimal("8.50"),
+                new BigDecimal("11.00"),
+                dataCotacao,
+                false,
+                "Meio Oeste"
+        );
+
+        when(consultarMercadoUseCase.consultarMercadoPorMunicipioECulturas(codigoIbge, List.of(1L)))
+                .thenReturn(List.of(new CulturaMercadoResultado(1L, "Soja", List.of(sojaProduto))));
+        when(historicoPamPort.buscarUltimoHistoricoPamPorMunicipioECulturas(codigoIbge, List.of(1L)))
+                .thenReturn(Map.of(1L, new HistoricoPamCultura(1L, true, 2025, 15000, 57000, 3800)));
+
+        RankingOportunidadesResultado ranking = service.calcularRankingPorMunicipioEPeriodo(codigoIbge, periodo);
+
+        assertEquals(1, ranking.oportunidades().size());
+        ScoreOportunidade oportunidade = ranking.oportunidades().get(0);
+        assertEquals(1, oportunidade.posicaoRanking());
+        assertEquals("Soja", oportunidade.nomeCultura());
+        assertEquals(2, oportunidade.quantidadeDecendiosFavoraveis());
+        assertTrue(oportunidade.notaFinal() > 0);
     }
 
     @Test

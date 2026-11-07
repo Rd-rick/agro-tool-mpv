@@ -89,6 +89,10 @@ public class CalculadoraPontuacaoOportunidade {
                 zoneamento.janelasPlantio().size(),
                 zoneamento.tiposSolo().size(),
                 zoneamento.ciclos().size(),
+                zoneamento.melhorPeriodoPlantio(),
+                zoneamento.recomendacaoMelhorPeriodo(),
+                zoneamento.soloProjecao(),
+                zoneamento.tiposSolo(),
                 prod != null ? prod.nomeComercial() : null,
                 prod != null ? prod.precoAtualReferencia() : null,
                 prod != null ? prod.unidadeComercializacao() : null,
@@ -156,10 +160,15 @@ public class CalculadoraPontuacaoOportunidade {
             pontos = 0;
         }
 
+        String complementoMelhorPeriodo = zoneamento.recomendacaoMelhorPeriodo() != null && !zoneamento.recomendacaoMelhorPeriodo().isBlank()
+                ? " " + zoneamento.recomendacaoMelhorPeriodo() + "."
+                : "";
+
         justificativas.add(String.format(
-                "Amplitude da Janela de Plantio (%d/20 pts): %d decêndio(s) favorável(is) identificado(s) na safra.",
+                "Amplitude da Janela de Plantio (%d/20 pts): %d decêndio(s) favorável(is) identificado(s) na safra.%s",
                 pontos,
-                decendios
+                decendios,
+                complementoMelhorPeriodo
         ));
 
         return pontos;

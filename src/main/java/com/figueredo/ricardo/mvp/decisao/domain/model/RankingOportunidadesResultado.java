@@ -10,6 +10,7 @@ public record RankingOportunidadesResultado(
         String pracaRegionalMunicipio,
         Integer safraIni,
         Integer safraFim,
+        ScoreOportunidade melhorOportunidade,
         List<ScoreOportunidade> oportunidades,
         List<String> avisosGerais
 ) {
@@ -23,5 +24,31 @@ public record RankingOportunidadesResultado(
         Objects.requireNonNull(uf, "uf é obrigatória");
         oportunidades = oportunidades != null ? List.copyOf(oportunidades) : List.of();
         avisosGerais = avisosGerais != null ? List.copyOf(avisosGerais) : List.of();
+        if (melhorOportunidade == null && !oportunidades.isEmpty()) {
+            melhorOportunidade = oportunidades.get(0);
+        }
+    }
+
+    public RankingOportunidadesResultado(
+            String codigoIbge,
+            String nomeMunicipio,
+            String uf,
+            String pracaRegionalMunicipio,
+            Integer safraIni,
+            Integer safraFim,
+            List<ScoreOportunidade> oportunidades,
+            List<String> avisosGerais
+    ) {
+        this(
+                codigoIbge,
+                nomeMunicipio,
+                uf,
+                pracaRegionalMunicipio,
+                safraIni,
+                safraFim,
+                oportunidades != null && !oportunidades.isEmpty() ? oportunidades.get(0) : null,
+                oportunidades,
+                avisosGerais
+        );
     }
 }

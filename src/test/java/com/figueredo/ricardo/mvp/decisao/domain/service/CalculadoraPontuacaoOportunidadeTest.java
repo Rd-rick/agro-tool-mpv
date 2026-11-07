@@ -19,6 +19,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -61,6 +62,12 @@ class CalculadoraPontuacaoOportunidadeTest {
         assertEquals(30, score.pontosPorCriterio().dinamicaPrecos());
         assertEquals(15, score.pontosPorCriterio().qualidadeInformacao());
         assertEquals(100, score.notaFinal());
+        assertNotNull(score.melhorPeriodoPlantio());
+        assertEquals(1, score.melhorPeriodoPlantio().decendio());
+        assertEquals(
+                "O melhor período de plantio é de 01 a 10 de Janeiro (risco de 20%) para Solo arenoso",
+                score.recomendacaoMelhorPeriodo()
+        );
         assertEquals("Soja industrial", score.produtoReferencia());
         assertEquals("Meio Oeste", score.pracaReferencia());
         assertFalse(score.fallbackEstadual());

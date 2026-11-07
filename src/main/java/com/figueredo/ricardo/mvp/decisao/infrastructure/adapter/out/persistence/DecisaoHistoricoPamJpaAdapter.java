@@ -95,4 +95,60 @@ public class DecisaoHistoricoPamJpaAdapter implements DecisaoHistoricoPamPort {
 
         return resultado;
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, List<HistoricoPamCultura>> buscarSerieHistoricaPamPorMunicipioECulturas(
+            String codigoIbge,
+            Collection<Long> culturaIds
+    ) {
+        if (codigoIbge == null || codigoIbge.isBlank() || culturaIds == null || culturaIds.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<Long, List<HistoricoPamCultura>> resultado = new LinkedHashMap<>();
+        for (Long culturaId : culturaIds) {
+            resultado.put(culturaId, new java.util.ArrayList<>());
+        }
+
+        Optional<DecisaoMunicipioEntity> municipioOpt = municipioRepository.findByCodigoIbge(codigoIbge.trim());
+        if (municipioOpt.isEmpty()) {
+            return Map.copyOf(resultado);
+        }
+
+        List<DecisaoCulturaCodigoFonteEntity> codigosFonte = culturaFonteRepository
+                .findAllByCulturaIdInAndFonteAndAtivoTrue(culturaIds, FONTE_PAM);
+
+        if (codigosFonte.isEmpty()) {
+            return Map.copyOf(resultado);
+        }
+
+        Map<Long, Long> culturaPorCodigoFonteId = new LinkedHashMap<>();
+        for (DecisaoCulturaCodigoFonteEntity cf : codigosFonte) {
+            culturaPorCodigoFonteId.put(cf.getId(), cf.getCulturaId());
+        }
+
+        List<DecisaoPamProducaoEntity> registrosPam = pamProducaoRepository
+                .findAllByMunicipioIdAndCulturaCodigoFonteIdInOrderByAnoDesc(
+                        municipioOpt.get().getId(),
+                        culturaPorCodigoFonteId.keySet()
+                );
+
+        for (DecisaoPamProducaoEntity reg : registrosPam) {
+            Long culturaId = culturaPorCodigoFonteId.get(reg.getCulturaCodigoFonteId());
+            if (culturaId == null) {
+                continue;
+            }
+            HistoricoPamCultura mapeado = mapper.toHistoricoPam(culturaId, reg);
+            if (mapeado.possuiHistorico()) {
+                resultado.get(culturaId).add(mapeado);
+            }
+        }
+
+        Map<Long, List<HistoricoPamCultura>> imutavel = new LinkedHashMap<>();
+        for (Map.Entry<Long, List<HistoricoPamCultura>> entry : resultado.entrySet()) {
+            imutavel.put(entry.getKey(), List.copyOf(entry.getValue()));
+        }
+        return imutavel;
+    }
 }

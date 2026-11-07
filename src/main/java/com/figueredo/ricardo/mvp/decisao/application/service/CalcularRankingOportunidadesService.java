@@ -12,6 +12,8 @@ import com.figueredo.ricardo.mvp.mercado.domain.model.ProdutoMercadoAnalise;
 import com.figueredo.ricardo.mvp.zarc.application.port.in.ConsultarZoneamentoMunicipioUseCase;
 import com.figueredo.ricardo.mvp.zarc.domain.model.CulturaZoneamentoConsolidado;
 import com.figueredo.ricardo.mvp.zarc.domain.model.Municipio;
+import com.figueredo.ricardo.mvp.zarc.domain.model.PeriodoPlantioMeses;
+import com.figueredo.ricardo.mvp.zarc.domain.model.TipoSoloZarc;
 import com.figueredo.ricardo.mvp.zarc.domain.model.ZoneamentoMunicipioResultado;
 import org.springframework.stereotype.Service;
 
@@ -44,24 +46,10 @@ public class CalcularRankingOportunidadesService implements CalcularRankingOport
             ConsultarMercadoCulturasUseCase consultarMercadoUseCase,
             DecisaoHistoricoPamPort historicoPamPort
     ) {
-        this(
-                consultarZoneamentoUseCase,
-                consultarMercadoUseCase,
-                historicoPamPort,
-                new CalculadoraPontuacaoOportunidade()
-        );
-    }
-
-    CalcularRankingOportunidadesService(
-            ConsultarZoneamentoMunicipioUseCase consultarZoneamentoUseCase,
-            ConsultarMercadoCulturasUseCase consultarMercadoUseCase,
-            DecisaoHistoricoPamPort historicoPamPort,
-            CalculadoraPontuacaoOportunidade calculadora
-    ) {
         this.consultarZoneamentoUseCase = Objects.requireNonNull(consultarZoneamentoUseCase, "consultarZoneamentoUseCase é obrigatório");
         this.consultarMercadoUseCase = Objects.requireNonNull(consultarMercadoUseCase, "consultarMercadoUseCase é obrigatório");
         this.historicoPamPort = Objects.requireNonNull(historicoPamPort, "historicoPamPort é obrigatório");
-        this.calculadora = Objects.requireNonNull(calculadora, "calculadora é obrigatória");
+        this.calculadora = new CalculadoraPontuacaoOportunidade();
     }
 
     @Override
@@ -74,6 +62,42 @@ public class CalcularRankingOportunidadesService implements CalcularRankingOport
                 filtro.safraFim()
         );
 
+        return calcularAPartirDoZoneamento(zoneamentoResultado);
+    }
+
+    @Override
+    public RankingOportunidadesResultado calcularRankingPorMunicipioEPeriodo(
+            String codigoIbge,
+            PeriodoPlantioMeses periodo
+    ) {
+        FiltroRankingOportunidades validacao = new FiltroRankingOportunidades(codigoIbge, null, null);
+        ZoneamentoMunicipioResultado zoneamentoResultado = consultarZoneamentoUseCase.consultarAptasPorMunicipioEPeriodo(
+                validacao.codigoIbge(),
+                periodo
+        );
+
+        return calcularAPartirDoZoneamento(zoneamentoResultado);
+    }
+
+    @Override
+    public RankingOportunidadesResultado calcularRankingPorMunicipioPeriodoESolo(
+            String codigoIbge,
+            PeriodoPlantioMeses periodo,
+            TipoSoloZarc tipoSolo
+    ) {
+        Objects.requireNonNull(periodo, "periodo é obrigatório");
+        Objects.requireNonNull(tipoSolo, "tipoSolo é obrigatório");
+        FiltroRankingOportunidades validacao = new FiltroRankingOportunidades(codigoIbge, null, null);
+        ZoneamentoMunicipioResultado zoneamentoResultado = consultarZoneamentoUseCase.consultarAptasPorMunicipioPeriodoESolo(
+                validacao.codigoIbge(),
+                periodo,
+                tipoSolo
+        );
+
+        return calcularAPartirDoZoneamento(zoneamentoResultado);
+    }
+
+    private RankingOportunidadesResultado calcularAPartirDoZoneamento(ZoneamentoMunicipioResultado zoneamentoResultado) {
         Municipio municipio = zoneamentoResultado.municipio();
         List<CulturaZoneamentoConsolidado> culturasAptas = zoneamentoResultado.culturasAptas();
 
@@ -85,6 +109,7 @@ public class CalcularRankingOportunidadesService implements CalcularRankingOport
                     municipio.observacaoPraca(),
                     zoneamentoResultado.safraIni(),
                     zoneamentoResultado.safraFim(),
+                    null,
                     List.of(),
                     List.of(AVISO_SEM_CULTURAS_APTAS)
             );
@@ -141,6 +166,7 @@ public class CalcularRankingOportunidadesService implements CalcularRankingOport
         }
 
         String pracaRegional = resolverPracaRegionalMunicipio(oportunidadesPosicaoAtribuida, municipio);
+        ScoreOportunidade melhor = oportunidadesPosicaoAtribuida.get(0);
 
         return new RankingOportunidadesResultado(
                 municipio.codigoIbge(),
@@ -149,6 +175,7 @@ public class CalcularRankingOportunidadesService implements CalcularRankingOport
                 pracaRegional,
                 zoneamentoResultado.safraIni(),
                 zoneamentoResultado.safraFim(),
+                melhor,
                 oportunidadesPosicaoAtribuida,
                 List.of(AVISO_GERAL_RANKING)
         );
