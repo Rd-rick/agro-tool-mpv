@@ -23,6 +23,17 @@ spring:
     locations: classpath:db/migration
 
 app:
+  ai:
+    provider: ${AI_PROVIDER:ollama}
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      model: ${OLLAMA_MODEL:llama3.1}
+      timeout-seconds: ${OLLAMA_TIMEOUT:60}
+    gemini:
+      api-key: ${GEMINI_API_KEY:}
+      model: ${GEMINI_MODEL:gemini-1.5-flash}
+      base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+      timeout-seconds: ${GEMINI_TIMEOUT:60}
   security:
     cors:
       allowed-origins:
@@ -39,6 +50,7 @@ app:
       safras-alvo:
         - "2024/2025"
         - "2025/2026"
+        - "2026/2027"
     epagri:
       enabled: ${EPAGRI_JOB_ENABLED:true}
       cron: "${EPAGRI_JOB_CRON:0 30 3 * * ?}"
