@@ -41,3 +41,16 @@ app:
       pagina-precos-url: "${EPAGRI_PAGINA_PRECOS_URL:https://cepa.epagri.sc.gov.br/index.php/mercado-agricola/}"
       url-diaria-padrao: "${EPAGRI_URL_DIARIA:https://docweb.epagri.sc.gov.br/website_cepa/precos/Historico_precos_diario.xlsx}"
       url-semanal-padrao: "${EPAGRI_URL_SEMANAL:https://docweb.epagri.sc.gov.br/website_cepa/precos/Historico_precos_semanal.xlsx}"
+    pam:
+      enabled: ${PAM_JOB_ENABLED:true}
+      cron: "${PAM_JOB_CRON:0 0 4 * * ?}"
+      batch-size: 1000
+      max-download-mb: ${PAM_MAX_DOWNLOAD_MB:100}
+      periodos-url: "${PAM_PERIODOS_URL:https://servicodados.ibge.gov.br/api/v3/agregados/5457/periodos}"
+      sidra-valores-base-url: "${PAM_SIDRA_BASE_URL:https://apisidra.ibge.gov.br/values/t/5457/n6/in%20n3%2042/v/8331,216,214,112,215}"
+      anos-alvo:
+        - 2021
+        - 2022
+        - 2023
+        - 2024
+        - 2025
