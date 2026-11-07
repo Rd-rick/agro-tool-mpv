@@ -4,6 +4,7 @@ import com.figueredo.ricardo.mvp.zarc.application.port.out.ControleCargaPort;
 import com.figueredo.ricardo.mvp.zarc.domain.model.ControleCarga;
 import com.figueredo.ricardo.mvp.zarc.domain.model.StatusCarga;
 import com.figueredo.ricardo.mvp.zarc.infrastructure.adapter.out.persistence.entity.ControleCargaEntity;
+import com.figueredo.ricardo.mvp.zarc.infrastructure.adapter.out.persistence.mapper.ControleCargaPersistenceMapper;
 import com.figueredo.ricardo.mvp.zarc.infrastructure.adapter.out.persistence.repository.SpringDataControleCargaRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,9 +15,14 @@ import java.util.Optional;
 public class ControleCargaJpaAdapter implements ControleCargaPort {
 
     private final SpringDataControleCargaRepository repository;
+    private final ControleCargaPersistenceMapper mapper;
 
-    public ControleCargaJpaAdapter(SpringDataControleCargaRepository repository) {
+    public ControleCargaJpaAdapter(
+            SpringDataControleCargaRepository repository,
+            ControleCargaPersistenceMapper mapper
+    ) {
         this.repository = repository;
+        this.mapper = mapper;
     }
 
     @Override
@@ -27,42 +33,14 @@ public class ControleCargaJpaAdapter implements ControleCargaPort {
                         identificadorRecurso,
                         StatusCarga.SUCESSO.name()
                 )
-                .map(this::toDomain);
+                .map(mapper::toDomain);
     }
 
     @Override
     @Transactional
     public ControleCarga salvar(ControleCarga controleCarga) {
-        ControleCargaEntity entity = toEntity(controleCarga);
+        ControleCargaEntity entity = mapper.toEntity(controleCarga);
         ControleCargaEntity salva = repository.save(entity);
-        return toDomain(salva);
-    }
-
-    private ControleCarga toDomain(ControleCargaEntity entity) {
-        return new ControleCarga(
-                entity.getId(),
-                entity.getFonte(),
-                entity.getIdentificadorRecurso(),
-                entity.getUltimoModificadoFonte(),
-                StatusCarga.valueOf(entity.getStatus()),
-                entity.getTotalRegistrosProcessados(),
-                entity.getMensagemErro(),
-                entity.getIniciadoEm(),
-                entity.getFinalizadoEm()
-        );
-    }
-
-    private ControleCargaEntity toEntity(ControleCarga domain) {
-        ControleCargaEntity entity = new ControleCargaEntity();
-        entity.setId(domain.getId());
-        entity.setFonte(domain.getFonte());
-        entity.setIdentificadorRecurso(domain.getIdentificadorRecurso());
-        entity.setUltimoModificadoFonte(domain.getUltimoModificadoFonte());
-        entity.setStatus(domain.getStatus().name());
-        entity.setTotalRegistrosProcessados(domain.getTotalRegistrosProcessados());
-        entity.setMensagemErro(domain.getMensagemErro());
-        entity.setIniciadoEm(domain.getIniciadoEm());
-        entity.setFinalizadoEm(domain.getFinalizadoEm());
-        return entity;
+        return mapper.toDomain(salva);
     }
 }
