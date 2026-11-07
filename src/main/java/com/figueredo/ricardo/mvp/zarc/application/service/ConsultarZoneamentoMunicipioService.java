@@ -8,8 +8,10 @@ import com.figueredo.ricardo.mvp.zarc.domain.model.CicloZoneamento;
 import com.figueredo.ricardo.mvp.zarc.domain.model.CulturaZoneamentoConsolidado;
 import com.figueredo.ricardo.mvp.zarc.domain.model.Municipio;
 import com.figueredo.ricardo.mvp.zarc.domain.model.PeriodoDecendio;
+import com.figueredo.ricardo.mvp.zarc.domain.model.PeriodoPlantioMeses;
 import com.figueredo.ricardo.mvp.zarc.domain.model.SafraVigencia;
 import com.figueredo.ricardo.mvp.zarc.domain.model.SoloZoneamento;
+import com.figueredo.ricardo.mvp.zarc.domain.model.TipoSoloZarc;
 import com.figueredo.ricardo.mvp.zarc.domain.model.ZarcZoneamentoItem;
 import com.figueredo.ricardo.mvp.zarc.domain.model.ZoneamentoMunicipioResultado;
 import org.springframework.stereotype.Service;
@@ -45,6 +47,103 @@ public class ConsultarZoneamentoMunicipioService implements ConsultarZoneamentoM
     @Override
     public ZoneamentoMunicipioResultado consultarAptasPorMunicipioESafra(FiltroZoneamentoMunicipio filtro) {
         Objects.requireNonNull(filtro, "filtro é obrigatório");
+        return consultarAptasPorMunicipioComFiltros(new FiltroDetalhadoZoneamentoMunicipio(
+                filtro.codigoIbge(),
+                filtro.safraIni(),
+                filtro.safraFim(),
+                null,
+                null,
+                null
+        ));
+    }
+
+    @Override
+    public ZoneamentoMunicipioResultado consultarAptasPorMunicipioEPeriodo(
+            String codigoIbge,
+            PeriodoPlantioMeses periodo
+    ) {
+        FiltroZoneamentoMunicipio validacaoIbge = new FiltroZoneamentoMunicipio(codigoIbge, null, null);
+        if (periodo == null) {
+            return consultarAptasPorMunicipioESafra(validacaoIbge);
+        }
+
+        Municipio municipio = municipioPort.buscarPorCodigoIbge(validacaoIbge.codigoIbge())
+                .orElseThrow(() -> new MunicipioNaoEncontradoException(validacaoIbge.codigoIbge()));
+
+        Long municipioId = municipioPort.buscarIdPorCodigoIbge(validacaoIbge.codigoIbge())
+                .orElseThrow(() -> new MunicipioNaoEncontradoException(validacaoIbge.codigoIbge()));
+
+        Optional<SafraVigencia> safraRecente = zarcZoneamentoQueryPort.buscarSafraMaisRecentePorMunicipio(municipioId);
+        if (safraRecente.isEmpty()) {
+            return new ZoneamentoMunicipioResultado(municipio, null, null, List.of());
+        }
+
+        Integer safraIni = safraRecente.get().safraIni();
+        Integer safraFim = safraRecente.get().safraFim();
+
+        List<ZarcZoneamentoItem> itensAptos = zarcZoneamentoQueryPort.buscarAptosPorMunicipioESafra(
+                municipioId,
+                safraIni,
+                safraFim
+        );
+
+        List<ZarcZoneamentoItem> itensNoPeriodo = itensAptos.stream()
+                .filter(item -> periodo.possuiDecendioFavoravelNoPeriodo(item.decendios(), RISCOS_FAVORAVEIS))
+                .toList();
+
+        if (itensNoPeriodo.isEmpty()) {
+            return new ZoneamentoMunicipioResultado(municipio, safraIni, safraFim, List.of());
+        }
+
+        List<CulturaZoneamentoConsolidado> culturasConsolidadas = consolidarPorCultura(itensNoPeriodo, null, periodo, null);
+        return new ZoneamentoMunicipioResultado(municipio, safraIni, safraFim, culturasConsolidadas);
+    }
+
+    @Override
+    public ZoneamentoMunicipioResultado consultarAptasPorMunicipioPeriodoESolo(FiltroPeriodoSoloZoneamento filtro) {
+        Objects.requireNonNull(filtro, "filtro é obrigatório");
+
+        Municipio municipio = municipioPort.buscarPorCodigoIbge(filtro.codigoIbge())
+                .orElseThrow(() -> new MunicipioNaoEncontradoException(filtro.codigoIbge()));
+
+        Long municipioId = municipioPort.buscarIdPorCodigoIbge(filtro.codigoIbge())
+                .orElseThrow(() -> new MunicipioNaoEncontradoException(filtro.codigoIbge()));
+
+        Optional<SafraVigencia> safraRecente = zarcZoneamentoQueryPort.buscarSafraMaisRecentePorMunicipio(municipioId);
+        if (safraRecente.isEmpty()) {
+            return new ZoneamentoMunicipioResultado(municipio, null, null, List.of());
+        }
+
+        Integer safraIni = safraRecente.get().safraIni();
+        Integer safraFim = safraRecente.get().safraFim();
+
+        List<ZarcZoneamentoItem> itensAptos = zarcZoneamentoQueryPort.buscarAptosPorMunicipioESafra(
+                municipioId,
+                safraIni,
+                safraFim
+        );
+
+        List<ZarcZoneamentoItem> itensNoPeriodoESolo = itensAptos.stream()
+                .filter(item -> correspondeAoSolo(item.soloCodigo(), filtro.tipoSolo()))
+                .filter(item -> filtro.periodo().possuiDecendioFavoravelNoPeriodo(item.decendios(), RISCOS_FAVORAVEIS))
+                .toList();
+
+        if (itensNoPeriodoESolo.isEmpty()) {
+            return new ZoneamentoMunicipioResultado(municipio, safraIni, safraFim, List.of());
+        }
+
+        List<CulturaZoneamentoConsolidado> culturasConsolidadas = consolidarPorCultura(
+                itensNoPeriodoESolo,
+                null,
+                filtro.periodo(),
+                filtro.tipoSolo()
+        );
+        return new ZoneamentoMunicipioResultado(municipio, safraIni, safraFim, culturasConsolidadas);
+    }
+
+    @Override
+    public ZoneamentoMunicipioResultado consultarAptasPorMunicipioComFiltros(FiltroDetalhadoZoneamentoMunicipio filtro) {
+        Objects.requireNonNull(filtro, "filtro é obrigatório");
 
         Municipio municipio = municipioPort.buscarPorCodigoIbge(filtro.codigoIbge())
                 .orElseThrow(() -> new MunicipioNaoEncontradoException(filtro.codigoIbge()));
@@ -70,15 +169,103 @@ public class ConsultarZoneamentoMunicipioService implements ConsultarZoneamentoM
                 safraFim
         );
 
-        if (itensAptos.isEmpty()) {
+        List<ZarcZoneamentoItem> itensFiltrados = filtrarItens(itensAptos, filtro);
+        if (itensFiltrados.isEmpty()) {
             return new ZoneamentoMunicipioResultado(municipio, safraIni, safraFim, List.of());
         }
 
-        List<CulturaZoneamentoConsolidado> culturasConsolidadas = consolidarPorCultura(itensAptos);
+        List<CulturaZoneamentoConsolidado> culturasConsolidadas = consolidarPorCultura(
+                itensFiltrados,
+                filtro.riscoMaximo(),
+                null,
+                null
+        );
         return new ZoneamentoMunicipioResultado(municipio, safraIni, safraFim, culturasConsolidadas);
     }
 
-    private List<CulturaZoneamentoConsolidado> consolidarPorCultura(List<ZarcZoneamentoItem> itens) {
+    @Override
+    public List<ZarcZoneamentoItem> consultarItensAptosPorMunicipioSafraECultura(
+            String codigoIbge,
+            Integer safraIni,
+            Integer safraFim,
+            Long culturaId
+    ) {
+        Objects.requireNonNull(culturaId, "culturaId é obrigatório");
+        FiltroZoneamentoMunicipio filtro = new FiltroZoneamentoMunicipio(codigoIbge, safraIni, safraFim);
+
+        municipioPort.buscarPorCodigoIbge(filtro.codigoIbge())
+                .orElseThrow(() -> new MunicipioNaoEncontradoException(filtro.codigoIbge()));
+
+        Long municipioId = municipioPort.buscarIdPorCodigoIbge(filtro.codigoIbge())
+                .orElseThrow(() -> new MunicipioNaoEncontradoException(filtro.codigoIbge()));
+
+        Integer iniResolvido = filtro.safraIni();
+        Integer fimResolvido = filtro.safraFim();
+
+        if (iniResolvido == null || fimResolvido == null) {
+            Optional<SafraVigencia> safraRecente = zarcZoneamentoQueryPort.buscarSafraMaisRecentePorMunicipio(municipioId);
+            if (safraRecente.isEmpty()) {
+                return List.of();
+            }
+            iniResolvido = safraRecente.get().safraIni();
+            fimResolvido = safraRecente.get().safraFim();
+        }
+
+        return zarcZoneamentoQueryPort.buscarAptosPorMunicipioESafra(municipioId, iniResolvido, fimResolvido)
+                .stream()
+                .filter(item -> Objects.equals(item.culturaId(), culturaId))
+                .toList();
+    }
+
+    private boolean correspondeAoSolo(String soloCodigoItem, TipoSoloZarc tipoSolo) {
+        if (tipoSolo == null) {
+            return true;
+        }
+        if (soloCodigoItem == null || soloCodigoItem.isBlank()) {
+            return false;
+        }
+        return TipoSoloZarc.buscarPorCodigoOuNome(soloCodigoItem)
+                .map(encontrado -> encontrado == tipoSolo)
+                .orElseGet(() -> soloCodigoItem.trim().equalsIgnoreCase(tipoSolo.getCodigo()));
+    }
+
+    private List<ZarcZoneamentoItem> filtrarItens(
+            List<ZarcZoneamentoItem> itens,
+            FiltroDetalhadoZoneamentoMunicipio filtro
+    ) {
+        if (itens.isEmpty()) {
+            return List.of();
+        }
+        return itens.stream()
+                .filter(item -> filtro.culturaId() == null || Objects.equals(item.culturaId(), filtro.culturaId()))
+                .filter(item -> filtro.soloCodigo() == null
+                        || (item.soloCodigo() != null && item.soloCodigo().trim().equalsIgnoreCase(filtro.soloCodigo())))
+                .filter(item -> possuiDecendioDentroDoRisco(item, filtro.riscoMaximo()))
+                .toList();
+    }
+
+    private boolean possuiDecendioDentroDoRisco(ZarcZoneamentoItem item, Integer riscoMaximo) {
+        for (Integer risco : item.decendios()) {
+            if (riscoFavoravelAceito(risco, riscoMaximo)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean riscoFavoravelAceito(Integer risco, Integer riscoMaximo) {
+        if (risco == null || risco == 0 || !RISCOS_FAVORAVEIS.contains(risco)) {
+            return false;
+        }
+        return riscoMaximo == null || risco <= riscoMaximo;
+    }
+
+    private List<CulturaZoneamentoConsolidado> consolidarPorCultura(
+            List<ZarcZoneamentoItem> itens,
+            Integer riscoMaximo,
+            PeriodoPlantioMeses periodoFiltro,
+            TipoSoloZarc tipoSoloFiltro
+    ) {
         Map<Long, List<ZarcZoneamentoItem>> agrupadosPorCultura = new LinkedHashMap<>();
         for (ZarcZoneamentoItem item : itens) {
             agrupadosPorCultura.computeIfAbsent(item.culturaId(), k -> new ArrayList<>()).add(item);
@@ -86,14 +273,19 @@ public class ConsultarZoneamentoMunicipioService implements ConsultarZoneamentoM
 
         List<CulturaZoneamentoConsolidado> resultado = new ArrayList<>();
         for (List<ZarcZoneamentoItem> grupo : agrupadosPorCultura.values()) {
-            consolidarGrupoCultura(grupo).ifPresent(resultado::add);
+            consolidarGrupoCultura(grupo, riscoMaximo, periodoFiltro, tipoSoloFiltro).ifPresent(resultado::add);
         }
 
         resultado.sort(Comparator.comparing(CulturaZoneamentoConsolidado::nomeCultura, String.CASE_INSENSITIVE_ORDER));
         return resultado;
     }
 
-    private Optional<CulturaZoneamentoConsolidado> consolidarGrupoCultura(List<ZarcZoneamentoItem> grupo) {
+    private Optional<CulturaZoneamentoConsolidado> consolidarGrupoCultura(
+            List<ZarcZoneamentoItem> grupo,
+            Integer riscoMaximo,
+            PeriodoPlantioMeses periodoFiltro,
+            TipoSoloZarc tipoSoloFiltro
+    ) {
         if (grupo.isEmpty()) {
             return Optional.empty();
         }
@@ -102,6 +294,7 @@ public class ConsultarZoneamentoMunicipioService implements ConsultarZoneamentoM
         Set<String> nomesOrigem = new LinkedHashSet<>();
         TreeSet<Integer> niveisRiscoCultura = new TreeSet<>();
         Map<Integer, TreeSet<Integer>> riscosPorDecendio = new TreeMap<>();
+        Map<Integer, Map<Integer, SoloZoneamento>> solosPorDecendioERisco = new LinkedHashMap<>();
         TreeSet<SoloZoneamento> solos = new TreeSet<>();
         TreeSet<CicloZoneamento> ciclos = new TreeSet<>();
         Set<String> portarias = new LinkedHashSet<>();
@@ -110,8 +303,10 @@ public class ConsultarZoneamentoMunicipioService implements ConsultarZoneamentoM
             if (item.nomeOrigemZarc() != null && !item.nomeOrigemZarc().isBlank()) {
                 nomesOrigem.add(item.nomeOrigemZarc().trim());
             }
+            SoloZoneamento soloDoItem = null;
             if (item.soloCodigo() != null && !item.soloCodigo().isBlank()) {
-                solos.add(new SoloZoneamento(item.soloCodigo(), item.soloDescricao()));
+                soloDoItem = new SoloZoneamento(item.soloCodigo(), item.soloDescricao());
+                solos.add(soloDoItem);
             }
             if (item.cicloCodigo() != null && !item.cicloCodigo().isBlank()) {
                 ciclos.add(new CicloZoneamento(item.cicloCodigo(), item.cicloDescricao()));
@@ -122,11 +317,17 @@ public class ConsultarZoneamentoMunicipioService implements ConsultarZoneamentoM
 
             int numeroDecendio = 1;
             for (Integer riscoDecendio : item.decendios()) {
-                if (riscoDecendio != null && RISCOS_FAVORAVEIS.contains(riscoDecendio)) {
+                boolean dentroDoPeriodo = periodoFiltro == null || periodoFiltro.contemDecendio(numeroDecendio);
+                if (dentroDoPeriodo && riscoFavoravelAceito(riscoDecendio, riscoMaximo)) {
                     niveisRiscoCultura.add(riscoDecendio);
                     riscosPorDecendio
                             .computeIfAbsent(numeroDecendio, d -> new TreeSet<>())
                             .add(riscoDecendio);
+                    if (soloDoItem != null) {
+                        solosPorDecendioERisco
+                                .computeIfAbsent(numeroDecendio, d -> new LinkedHashMap<>())
+                                .putIfAbsent(riscoDecendio, soloDoItem);
+                    }
                 }
                 numeroDecendio++;
             }
@@ -142,6 +343,32 @@ public class ConsultarZoneamentoMunicipioService implements ConsultarZoneamentoM
 
         Integer riscoMinimo = niveisRiscoCultura.first();
 
+        PeriodoDecendio melhorPeriodo = periodoFiltro != null
+                ? periodoFiltro.selecionarMelhorDecendio(janelasPlantio).orElseGet(() -> selecionarMenorRiscoPadrao(janelasPlantio))
+                : selecionarMenorRiscoPadrao(janelasPlantio);
+
+        SoloZoneamento soloProjecao = null;
+        if (melhorPeriodo != null) {
+            Map<Integer, SoloZoneamento> porRisco = solosPorDecendioERisco.get(melhorPeriodo.decendio());
+            if (porRisco != null) {
+                soloProjecao = porRisco.get(melhorPeriodo.menorRisco());
+            }
+        }
+        if (soloProjecao == null && tipoSoloFiltro != null) {
+            soloProjecao = tipoSoloFiltro.toSoloZoneamento();
+        }
+        if (soloProjecao == null && !solos.isEmpty()) {
+            soloProjecao = solos.first();
+        }
+
+        String descricaoSoloRecomendacao = soloProjecao != null
+                ? soloProjecao.tipoSolo()
+                : (!solos.isEmpty() ? solos.first().tipoSolo() : "o solo selecionado");
+
+        String recomendacao = melhorPeriodo != null
+                ? melhorPeriodo.formatarRecomendacaoSolo(descricaoSoloRecomendacao)
+                : null;
+
         return Optional.of(new CulturaZoneamentoConsolidado(
                 primeiro.culturaId(),
                 primeiro.nomeCultura(),
@@ -153,7 +380,20 @@ public class ConsultarZoneamentoMunicipioService implements ConsultarZoneamentoM
                 janelasPlantio,
                 new ArrayList<>(solos),
                 new ArrayList<>(ciclos),
-                new ArrayList<>(portarias)
+                new ArrayList<>(portarias),
+                melhorPeriodo,
+                recomendacao,
+                soloProjecao
         ));
+    }
+
+    private PeriodoDecendio selecionarMenorRiscoPadrao(List<PeriodoDecendio> janelas) {
+        if (janelas == null || janelas.isEmpty()) {
+            return null;
+        }
+        return janelas.stream()
+                .min(Comparator.comparingInt(PeriodoDecendio::menorRisco)
+                        .thenComparingInt(PeriodoDecendio::decendio))
+                .orElse(null);
     }
 }

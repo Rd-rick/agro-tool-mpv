@@ -63,10 +63,16 @@ public class ConsultarMercadoCulturasService implements ConsultarMercadoCulturas
             return List.of();
         }
 
-        List<ProdutoCotacaoMercado> produtos = mercadoConsultaPort.buscarProdutosAtivosPorCulturasEFonte(
+        List<ProdutoCotacaoMercado> produtosEpagri = mercadoConsultaPort.buscarProdutosAtivosPorCulturasEFonte(
                 filtro.culturaIds(),
                 FONTE_EPAGRI
         );
+        List<ProdutoCotacaoMercado> produtosConab = mercadoConsultaPort.buscarProdutosAtivosConabPorCulturas(
+                filtro.culturaIds()
+        );
+        List<ProdutoCotacaoMercado> produtos = new ArrayList<>(produtosEpagri.size() + produtosConab.size());
+        produtos.addAll(produtosEpagri);
+        produtos.addAll(produtosConab);
 
         Map<Long, List<ProdutoCotacaoMercado>> produtosPorCultura = new LinkedHashMap<>();
         for (ProdutoCotacaoMercado produto : produtos) {

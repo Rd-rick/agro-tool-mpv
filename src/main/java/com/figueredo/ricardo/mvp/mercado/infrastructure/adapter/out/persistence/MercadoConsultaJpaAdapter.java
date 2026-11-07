@@ -81,6 +81,12 @@ public class MercadoConsultaJpaAdapter implements MercadoConsultaPort {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ProdutoCotacaoMercado> buscarProdutosAtivosConabPorCulturas(Collection<Long> culturaIds) {
+        return buscarProdutosAtivosPorCulturasEFonte(culturaIds, "CONAB");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<RegiaoPracaMercado> buscarPracasAtivasPorUf(String uf) {
         return pracaRepository.findAllByUfAndAtivoTrueOrderByNomeAsc(uf).stream()
                 .map(mapper::toDomain)

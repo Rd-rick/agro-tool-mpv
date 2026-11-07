@@ -8,6 +8,7 @@ import com.figueredo.ricardo.mvp.zarc.application.port.out.ZarcDatasetClientPort
 import com.figueredo.ricardo.mvp.zarc.application.port.out.ZarcPersistencePort;
 import com.figueredo.ricardo.mvp.zarc.domain.model.ControleCarga;
 import com.figueredo.ricardo.mvp.zarc.domain.model.RecursoZarc;
+import com.figueredo.ricardo.mvp.zarc.domain.model.TipoSoloZarc;
 import com.figueredo.ricardo.mvp.zarc.domain.model.ZarcRegistro;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -256,6 +257,10 @@ public class ImportarZarcService implements ImportarZarcUseCase {
                 })
                 .toList();
 
+        String soloDescricao = TipoSoloZarc.buscarPorCodigoOuNome(soloCodigo)
+                .map(TipoSoloZarc::getDescricaoCompleta)
+                .orElse(null);
+
         return new ZarcRegistro(
                 municipioId,
                 culturaId,
@@ -264,7 +269,7 @@ public class ImportarZarcService implements ImportarZarcUseCase {
                 cicloCodigo,
                 null,
                 soloCodigo,
-                null,
+                soloDescricao,
                 manejoCodigo,
                 manejoDescricao,
                 portaria,

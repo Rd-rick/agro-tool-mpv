@@ -85,4 +85,16 @@ public record PeriodoDecendio(
     public String descricaoPeriodo() {
         return String.format("%02d a %02d de %s", diaInicio, diaFim, nomeMes);
     }
+
+    public String formatarRecomendacaoSolo(String descricaoSolo) {
+        String soloFormatado = descricaoSolo != null && !descricaoSolo.isBlank()
+                ? descricaoSolo.trim()
+                : "o solo selecionado";
+        return String.format(
+                "O melhor período de plantio é de %s (risco de %d%%) para %s",
+                descricaoPeriodo(),
+                menorRisco,
+                soloFormatado
+        );
+    }
 }

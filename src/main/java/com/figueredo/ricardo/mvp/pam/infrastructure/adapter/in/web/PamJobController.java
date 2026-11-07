@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/jobs/pam")
 public class PamJobController {
 
-    private static final int ANO_MINIMO = 1974;
+    private static final int ANO_MINIMO = 2010;
     private static final int ANO_MAXIMO = 2100;
 
     private final ImportarPamUseCase importarPamUseCase;

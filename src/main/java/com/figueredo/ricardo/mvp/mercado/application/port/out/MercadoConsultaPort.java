@@ -19,6 +19,10 @@ public interface MercadoConsultaPort {
 
     List<ProdutoCotacaoMercado> buscarProdutosAtivosPorCulturasEFonte(Collection<Long> culturaIds, String fonte);
 
+    default List<ProdutoCotacaoMercado> buscarProdutosAtivosConabPorCulturas(Collection<Long> culturaIds) {
+        return List.of();
+    }
+
     List<RegiaoPracaMercado> buscarPracasAtivasPorUf(String uf);
 
     Optional<LocalDate> buscarUltimaDataCotacao(Long produtoId, Long pracaId, String frequencia);
