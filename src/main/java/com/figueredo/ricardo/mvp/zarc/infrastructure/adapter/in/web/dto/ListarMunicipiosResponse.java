@@ -8,7 +8,9 @@ public record ListarMunicipiosResponse(
     public record MunicipioItemResponse(
             String nome,
             String uf,
-            String codigoIbge
+            String codigoIbge,
+            Long pracaReferenciaId,
+            String observacaoPraca
     ) {
     }
 }

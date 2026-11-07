@@ -21,7 +21,9 @@ public class MunicipioWebMapper {
         return new MunicipioItemResponse(
                 municipio.nome(),
                 municipio.uf(),
-                municipio.codigoIbge()
+                municipio.codigoIbge(),
+                municipio.pracaReferenciaId(),
+                municipio.observacaoPraca()
         );
     }
 }

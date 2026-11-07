@@ -35,8 +35,8 @@ class MunicipioControllerTest {
     @Test
     void deveRetornarStatusOkComPayloadDeMunicipios() {
         List<Municipio> municipios = List.of(
-                new Municipio("Abdon Batista", "SC", "4200051"),
-                new Municipio("Curitibanos", "SC", "4204806")
+                new Municipio("Abdon Batista", "SC", "4200051", 7L, "Praça regional atribuída por microrregião IBGE 009 (Curitibanos) -> Meio Oeste (Epagri/Cepa)"),
+                new Municipio("Curitibanos", "SC", "4204806", 7L, "Praça regional atribuída por microrregião IBGE 009 (Curitibanos) -> Meio Oeste (Epagri/Cepa)")
         );
         when(listarMunicipiosUseCase.listarTodos()).thenReturn(municipios);
 
@@ -48,6 +48,8 @@ class MunicipioControllerTest {
         assertEquals("Abdon Batista", response.getBody().municipios().get(0).nome());
         assertEquals("SC", response.getBody().municipios().get(0).uf());
         assertEquals("4200051", response.getBody().municipios().get(0).codigoIbge());
+        assertEquals(7L, response.getBody().municipios().get(0).pracaReferenciaId());
+        assertEquals("Praça regional atribuída por microrregião IBGE 009 (Curitibanos) -> Meio Oeste (Epagri/Cepa)", response.getBody().municipios().get(1).observacaoPraca());
         verify(listarMunicipiosUseCase).listarTodos();
     }
 }
