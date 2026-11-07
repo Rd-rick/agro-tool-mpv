@@ -26,8 +26,8 @@ class ListarMunicipiosServiceTest {
     @Test
     void deveRetornarListaDeMunicipiosOrdenadosPorNome() {
         List<Municipio> esperado = List.of(
-                new Municipio("Abdon Batista", "SC", "4200051"),
-                new Municipio("Curitibanos", "SC", "4204806")
+                new Municipio("Abdon Batista", "SC", "4200051", 7L, "Praça regional atribuída por microrregião IBGE 009 (Curitibanos) -> Meio Oeste (Epagri/Cepa)"),
+                new Municipio("Curitibanos", "SC", "4204806", 7L, "Praça regional atribuída por microrregião IBGE 009 (Curitibanos) -> Meio Oeste (Epagri/Cepa)")
         );
         when(municipioPort.listarTodosOrdenadosPorNome()).thenReturn(esperado);
 
@@ -37,7 +37,10 @@ class ListarMunicipiosServiceTest {
         assertEquals("Abdon Batista", resultado.get(0).nome());
         assertEquals("SC", resultado.get(0).uf());
         assertEquals("4200051", resultado.get(0).codigoIbge());
+        assertEquals(7L, resultado.get(0).pracaReferenciaId());
         assertEquals("Curitibanos", resultado.get(1).nome());
+        assertEquals(7L, resultado.get(1).pracaReferenciaId());
+        assertEquals("Praça regional atribuída por microrregião IBGE 009 (Curitibanos) -> Meio Oeste (Epagri/Cepa)", resultado.get(1).observacaoPraca());
         verify(municipioPort).listarTodosOrdenadosPorNome();
     }
 }

@@ -19,7 +19,9 @@ public class MunicipioPersistenceMapper {
         return new Municipio(
                 entity.getNome(),
                 entity.getUf(),
-                entity.getCodigoIbge()
+                entity.getCodigoIbge(),
+                entity.getPracaReferenciaId(),
+                entity.getObservacaoPraca()
         );
     }
 }

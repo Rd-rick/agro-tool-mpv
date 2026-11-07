@@ -29,4 +29,8 @@ public class MunicipioEntity {
 
     @JdbcTypeCode(Types.CHAR)
     private String uf;
+
+    private Long pracaReferenciaId;
+
+    private String observacaoPraca;
 }
