@@ -14,6 +14,7 @@ interface ComparadorViewProps {
   culturasDisponiveis: CulturaPossivelDashboard[];
   selectedIds: number[];
   onToggleCompare: (id: number) => void;
+  onSelectCultura?: (culturaId: number, initialTab?: 'zoneamento' | 'mercado' | 'decisao', scrollToTabua?: boolean) => void;
 }
 
 export const ComparadorView: React.FC<ComparadorViewProps> = ({
@@ -24,6 +25,7 @@ export const ComparadorView: React.FC<ComparadorViewProps> = ({
   culturasDisponiveis,
   selectedIds,
   onToggleCompare,
+  onSelectCultura,
 }) => {
   const [data, setData] = useState<CompararCulturasResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -204,11 +206,22 @@ export const ComparadorView: React.FC<ComparadorViewProps> = ({
                           {c.janelasPlantio.quantidadeDecendiosFavoraveis}
                         </span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between items-center">
                         <span className="text-slate-600">Recomendação:</span>
-                        <span className="font-bold text-brand-700 truncate max-w-[150px]">
-                          {c.janelasPlantio.recomendacaoMelhorPeriodo || 'Safra atual'}
-                        </span>
+                        {onSelectCultura ? (
+                          <button
+                            type="button"
+                            onClick={() => onSelectCultura(c.culturaId, 'zoneamento', true)}
+                            className="font-bold text-emerald-700 hover:text-emerald-800 hover:underline cursor-pointer text-xs transition-colors"
+                            title="Ver tábua de risco"
+                          >
+                            Ver tábua de risco
+                          </button>
+                        ) : (
+                          <span className="font-bold text-emerald-700 text-xs">
+                            Ver tábua de risco
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

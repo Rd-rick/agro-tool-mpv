@@ -1,14 +1,11 @@
 import React from 'react';
 import { Sprout, ShieldCheck, TrendingUp, Bot, Sparkles, ArrowUp } from 'lucide-react';
-import { useFilter } from '../../context/FilterContext';
 
 interface DashboardEmptyStateProps {
   onApplyPreset?: () => void;
 }
 
 export const DashboardEmptyState: React.FC<DashboardEmptyStateProps> = () => {
-  const { fillCuritibanosPreset } = useFilter();
-
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-3xl p-8 sm:p-12 border border-slate-100 shadow-soft text-center relative overflow-hidden">
@@ -35,17 +32,6 @@ export const DashboardEmptyState: React.FC<DashboardEmptyStateProps> = () => {
             <ArrowUp className="w-4 h-4 animate-bounce" />
             <span>Preencha os campos obrigatórios acima para iniciar</span>
           </div>
-
-          <div className="mt-8 pt-6 border-t border-slate-100 w-full flex flex-col sm:flex-row items-center justify-center gap-3">
-            <span className="text-xs text-slate-400 font-medium">Quer testar rapidamente?</span>
-            <button
-              type="button"
-              onClick={fillCuritibanosPreset}
-              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-brand-50 hover:text-brand-800 text-slate-700 text-xs font-bold transition-all border border-slate-200/80"
-            >
-              Preencher com Curitibanos - SC
-            </button>
-          </div>
         </div>
       </div>
 
@@ -56,7 +42,7 @@ export const DashboardEmptyState: React.FC<DashboardEmptyStateProps> = () => {
           </div>
           <div>
             <h4 className="text-sm font-bold text-slate-900">Segurança Climática ZARC</h4>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed sm:text-sm font-medium">
               Zoneamento de risco de 20%, 30% ou 40%, amplitude de decêndios, solos e ciclos agronômicos (peso de até 55 pts no score).
             </p>
           </div>
@@ -71,7 +57,7 @@ export const DashboardEmptyState: React.FC<DashboardEmptyStateProps> = () => {
           </div>
           <div>
             <h4 className="text-sm font-bold text-slate-900">Motor de Decisão (100 pts)</h4>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed sm:text-sm font-medium">
               Métrica multicritério: Clima (40) + Janela (15) + Tendência Epagri (20) + Receita Bruta PAM (10) + Qualidade (15).
             </p>
           </div>
@@ -86,7 +72,7 @@ export const DashboardEmptyState: React.FC<DashboardEmptyStateProps> = () => {
           </div>
           <div>
             <h4 className="text-sm font-bold text-slate-900">Projeção da Safra & IA</h4>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed sm:text-sm font-medium">
               Estimativa de sacas colhidas e receita bruta total para a sua área, além de consultoria com IA contextualizada.
             </p>
           </div>

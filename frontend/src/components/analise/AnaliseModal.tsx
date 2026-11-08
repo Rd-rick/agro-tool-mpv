@@ -4,6 +4,7 @@ import {
   Sprout,
   ShieldCheck,
   TrendingUp,
+  TrendingDown,
   AlertCircle,
   Award,
   Layers,
@@ -24,6 +25,8 @@ interface AnaliseModalProps {
   mesFim: string;
   soloCodigo?: string;
   areaHa?: string;
+  initialTab?: 'zoneamento' | 'mercado' | 'decisao';
+  scrollToTabua?: boolean;
   onClose: () => void;
 }
 
@@ -34,12 +37,32 @@ export const AnaliseModal: React.FC<AnaliseModalProps> = ({
   mesFim,
   soloCodigo,
   areaHa,
+  initialTab,
+  scrollToTabua,
   onClose,
 }) => {
   const [data, setData] = useState<AnaliseCulturaResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'zoneamento' | 'mercado' | 'decisao'>('zoneamento');
+  const [activeTab, setActiveTab] = useState<'zoneamento' | 'mercado' | 'decisao'>(initialTab || 'zoneamento');
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab, culturaId]);
+
+  useEffect(() => {
+    if (scrollToTabua && !loading && data?.zoneamento?.matrizDecendios) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById('tabua-risco-section');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [scrollToTabua, loading, data]);
 
   useEffect(() => {
     if (!culturaId) return;
@@ -95,7 +118,7 @@ export const AnaliseModal: React.FC<AnaliseModalProps> = ({
           </button>
         </div>
 
-        <div className="flex items-center gap-2 px-6 pt-4 border-b border-slate-100">
+        <div className="flex items-center gap-2 px-0 md:px-6 pt-4 border-b border-slate-100">
           <button
             type="button"
             onClick={() => setActiveTab('zoneamento')}
@@ -176,7 +199,9 @@ export const AnaliseModal: React.FC<AnaliseModalProps> = ({
                   </div>
 
                   {data.zoneamento.matrizDecendios && (
-                    <DecendioMatrix matriz={data.zoneamento.matrizDecendios} />
+                    <div id="tabua-risco-section">
+                      <DecendioMatrix matriz={data.zoneamento.matrizDecendios} />
+                    </div>
                   )}
 
                   <div className="bg-slate-50/70 rounded-2xl p-5 border border-slate-100 space-y-2">
@@ -241,7 +266,14 @@ export const AnaliseModal: React.FC<AnaliseModalProps> = ({
 
                   <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
                     <h4 className="text-xs sm:text-sm font-bold text-slate-900 mb-2 flex items-center gap-1.5">
-                      <TrendingUp className="w-4 h-4 text-brand-600" />
+                      {(data.mercado.tendencia === 'DESVALORIZACAO' ||
+                        (data.mercado.variacao30d !== null && data.mercado.variacao30d !== undefined
+                          ? data.mercado.variacao30d < 0
+                          : (data.mercado.variacao90d ?? 0) < 0)) ? (
+                        <TrendingDown className="w-4 h-4 text-rose-600" />
+                      ) : (
+                        <TrendingUp className="w-4 h-4 text-brand-600" />
+                      )}
                       <span>Comportamento recente de mercado</span>
                     </h4>
                     <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
@@ -358,16 +390,16 @@ export const AnaliseModal: React.FC<AnaliseModalProps> = ({
                                 </span>
                               </div>
 
-                              <div className="bg-emerald-50/70 p-3.5 rounded-2xl border border-emerald-100 sm:col-span-1 lg:col-span-2">
+                              <div className="bg-emerald-50/70 p-3.5 rounded-2xl border border-emerald-100 col-span-2 sm:col-span-3 lg:col-span-4">
                                 <span className="text-xs text-emerald-800 font-semibold block mb-0.5">Receita bruta estimada por hectare</span>
                                 <span className="font-black text-emerald-900 tabular-nums text-lg">
                                   {formatCurrency(projecao.receitaBrutaPorHa)} <span className="text-xs font-medium text-emerald-700">/ ha</span>
                                 </span>
                               </div>
 
-                              <div className="bg-emerald-50/70 p-3.5 rounded-2xl border border-emerald-100 sm:col-span-2 lg:col-span-2">
+                              <div className="bg-emerald-50/70 p-3.5 rounded-2xl border border-emerald-100 col-span-2 sm:col-span-3 lg:col-span-4">
                                 <span className="text-xs text-emerald-800 font-semibold block mb-0.5">Receita bruta total ({projecao.areaInformadaHa} ha)</span>
-                                <span className="font-black text-emerald-900 tabular-nums text-xl">
+                                <span className="font-black text-emerald-900 tabular-nums text-lg">
                                   {formatCurrency(projecao.receitaBrutaTotal)}
                                 </span>
                               </div>
