@@ -6,8 +6,12 @@ import type {
   CompararCulturasResponse,
   PerguntaAssistenteRequest,
   RespostaAssistenteResponse,
-  JobExecutionResponse,
+  ClimaAtualResponse,
 } from '../types/api';
+
+export async function getClimaAtual(codigoIbge: string): Promise<ClimaAtualResponse> {
+  return apiFetch<ClimaAtualResponse>(`/api/v1/clima/atual/${encodeURIComponent(codigoIbge)}`);
+}
 
 export async function getMunicipios(): Promise<ListarMunicipiosResponse> {
   return apiFetch<ListarMunicipiosResponse>('/api/v1/municipios');
@@ -76,25 +80,4 @@ export async function postPerguntaAssistente(
     method: 'POST',
     body: JSON.stringify(payload),
   });
-}
-
-export async function postJobEpagri(frequencia?: string): Promise<JobExecutionResponse> {
-  const path = frequencia
-    ? `/api/v1/jobs/epagri/executar/${encodeURIComponent(frequencia)}`
-    : '/api/v1/jobs/epagri/executar';
-  return apiFetch<JobExecutionResponse>(path, { method: 'POST' });
-}
-
-export async function postJobPam(ano?: number | string): Promise<JobExecutionResponse> {
-  const path = ano
-    ? `/api/v1/jobs/pam/executar/${encodeURIComponent(ano)}`
-    : '/api/v1/jobs/pam/executar';
-  return apiFetch<JobExecutionResponse>(path, { method: 'POST' });
-}
-
-export async function postJobZarc(safra?: string): Promise<JobExecutionResponse> {
-  const path = safra
-    ? `/api/v1/jobs/zarc/executar/${encodeURIComponent(safra)}`
-    : '/api/v1/jobs/zarc/executar';
-  return apiFetch<JobExecutionResponse>(path, { method: 'POST' });
 }

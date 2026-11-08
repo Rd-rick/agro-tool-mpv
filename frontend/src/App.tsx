@@ -14,7 +14,7 @@ import { FloatingChatbot } from './components/common/FloatingChatbot';
 import { CulturasGrid } from './components/culturas/CulturasGrid';
 import { ComparadorView } from './components/comparador/ComparadorView';
 import { AnaliseModal } from './components/analise/AnaliseModal';
-import { JobsModal } from './components/jobs/JobsModal';
+import { TiposSolosModal } from './components/solos/TiposSolosModal';
 import { getDashboard } from './api/endpoints';
 import type { FilterValues } from './utils/validators';
 import type { DashboardResponse } from './types/api';
@@ -27,9 +27,21 @@ const MainApp: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<DashboardResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedCulturaId, setSelectedCulturaId] = useState<number | null>(null);
+  const [modalInitialTab, setModalInitialTab] = useState<'zoneamento' | 'mercado' | 'decisao'>('zoneamento');
+  const [modalScrollToTabua, setModalScrollToTabua] = useState<boolean>(false);
   const [selectedToCompare, setSelectedToCompare] = useState<number[]>([1, 2]);
-  const [isJobsModalOpen, setIsJobsModalOpen] = useState<boolean>(false);
+  const [isSolosModalOpen, setIsSolosModalOpen] = useState<boolean>(false);
   const [consultaErro, setConsultaErro] = useState<string | null>(null);
+
+  const handleOpenAnaliseModal = (
+    id: number,
+    tab: 'zoneamento' | 'mercado' | 'decisao' = 'zoneamento',
+    scrollToTabua: boolean = false
+  ) => {
+    setSelectedCulturaId(id);
+    setModalInitialTab(tab);
+    setModalScrollToTabua(scrollToTabua);
+  };
 
   const handleConsultar = async (filters: FilterValues) => {
     setLoading(true);
@@ -461,17 +473,25 @@ const MainApp: React.FC = () => {
       <Header
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onOpenJobsModal={() => setIsJobsModalOpen(true)}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight pb-2">
             {greeting}, Produtor !
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-            Recomendações inteligentes de plantio para Santa Catarina com dados ZARC, Epagri e CONAB
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-1">
+            <p className="text-xs sm:text-sm text-slate-500 font-medium">
+              Recomendações inteligentes de plantio para Santa Catarina com dados ZARC, Epagri e CONAB
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsSolosModalOpen(true)}
+              className="text-xs sm:text-sm font-semibold text-brand-600 hover:text-brand-700 hover:underline flex items-center gap-1 shrink-0 transition-colors cursor-pointer"
+            >
+              <span>Saiba mais sobre os tipos de solos</span>
+            </button>
+          </div>
         </div>
 
         <FilterBar loading={loading} onConsultar={handleConsultar} />
@@ -489,12 +509,12 @@ const MainApp: React.FC = () => {
           activeTab === 'dashboard' ? (
             <DashboardEmptyState />
           ) : (
-            <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-soft">
+            <div className="h-80 flex flex-col items-center justify-center bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-soft">
               <Sparkles className="w-10 h-10 text-brand-600 mx-auto mb-3" />
-              <h3 className="text-base font-bold text-slate-900">
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                 Selecione os filtros acima e clique em &quot;Consultar&quot;
               </h3>
-              <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+              <p className="text-sm sm:text-sm mt-3 font-medium text-slate-500 mt-1 max-w-md mx-auto">
                 Para visualizar as culturas aptas ou comparar espécies, é necessário primeiro indicar o município e a janela de plantio.
               </p>
             </div>
@@ -513,7 +533,7 @@ const MainApp: React.FC = () => {
                   <div className="h-64 sm:h-72">
                     <OpportunityTable
                       oportunidades={dashboardData.rankingOportunidades}
-                      onSelectCultura={(id) => setSelectedCulturaId(id)}
+                      onSelectCultura={(id) => handleOpenAnaliseModal(id)}
                       onViewAll={() => setActiveTab('culturas')}
                     />
                   </div>
@@ -544,7 +564,7 @@ const MainApp: React.FC = () => {
                 culturas={dashboardData.culturasPossiveis}
                 selectedToCompare={selectedToCompare}
                 onToggleCompare={handleToggleCompare}
-                onSelectCultura={(id) => setSelectedCulturaId(id)}
+                onSelectCultura={(id) => handleOpenAnaliseModal(id)}
               />
             )}
 
@@ -557,6 +577,7 @@ const MainApp: React.FC = () => {
                 culturasDisponiveis={dashboardData.culturasPossiveis}
                 selectedIds={selectedToCompare}
                 onToggleCompare={handleToggleCompare}
+                onSelectCultura={handleOpenAnaliseModal}
               />
             )}
           </>
@@ -570,17 +591,17 @@ const MainApp: React.FC = () => {
         mesFim={appliedFilters?.mesFim || ''}
         soloCodigo={appliedFilters?.soloCodigo}
         areaHa={appliedFilters?.areaHa}
-        onClose={() => setSelectedCulturaId(null)}
+        initialTab={modalInitialTab}
+        scrollToTabua={modalScrollToTabua}
+        onClose={() => {
+          setSelectedCulturaId(null);
+          setModalScrollToTabua(false);
+        }}
       />
 
-      <JobsModal
-        isOpen={isJobsModalOpen}
-        onClose={() => setIsJobsModalOpen(false)}
-        onSuccessRefresh={() => {
-          if (appliedFilters) {
-            handleConsultar(appliedFilters);
-          }
-        }}
+      <TiposSolosModal
+        isOpen={isSolosModalOpen}
+        onClose={() => setIsSolosModalOpen(false)}
       />
 
       <FloatingChatbot />
