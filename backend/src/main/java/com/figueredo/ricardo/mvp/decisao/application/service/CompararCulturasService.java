@@ -315,7 +315,7 @@ public class CompararCulturasService implements CompararCulturasUseCase {
                     false,
                     null,
                     0,
-                    new PontuacaoCriterios(0, 0, 0, 0),
+                    PontuacaoCriterios.zerada(),
                     List.of("Cultura sem janela favorável no ZARC para o município, período e solo; pontuação de oportunidade não aplicável.")
             );
         }

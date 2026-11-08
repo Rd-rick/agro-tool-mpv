@@ -26,7 +26,8 @@ public interface ConsultarDashboardUseCase {
                 throw new IllegalArgumentException("codigoIbge deve ser um código IBGE de SC com 7 dígitos");
             }
             Objects.requireNonNull(periodoPlantio, "periodoPlantio é obrigatório");
-            if (areaHa != null && (areaHa.compareTo(BigDecimal.ZERO) <= 0 || areaHa.compareTo(new BigDecimal("1000000")) > 0)) {
+            Objects.requireNonNull(areaHa, "areaHa é obrigatória");
+            if (areaHa.compareTo(BigDecimal.ZERO) <= 0 || areaHa.compareTo(new BigDecimal("1000000")) > 0) {
                 throw new IllegalArgumentException("areaHa deve ser positiva e no máximo 1000000");
             }
         }

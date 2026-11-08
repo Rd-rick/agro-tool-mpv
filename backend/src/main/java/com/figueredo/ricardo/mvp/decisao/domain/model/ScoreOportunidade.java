@@ -37,6 +37,7 @@ public record ScoreOportunidade(
         boolean possuiHistoricoPam,
         Integer ultimoAnoPam,
         Integer rendimentoMedioPamKgHa,
+        ProjecaoProducaoEconomica projecaoEconomica,
         List<String> justificativas,
         List<String> avisosMetodologicos
 ) {
@@ -59,6 +60,73 @@ public record ScoreOportunidade(
         }
         justificativas = justificativas != null ? List.copyOf(justificativas) : List.of();
         avisosMetodologicos = avisosMetodologicos != null ? List.copyOf(avisosMetodologicos) : List.of();
+    }
+
+    public ScoreOportunidade(
+            Long culturaId,
+            String nomeCultura,
+            String nomeCientifico,
+            String grupoAgricola,
+            int posicaoRanking,
+            int notaFinal,
+            PontuacaoCriterios pontosPorCriterio,
+            Integer riscoMinimoZarc,
+            int quantidadeDecendiosFavoraveis,
+            int quantidadeSolosAptos,
+            int quantidadeCiclosAptos,
+            PeriodoDecendio melhorPeriodoPlantio,
+            String recomendacaoMelhorPeriodo,
+            SoloZoneamento soloProjecao,
+            List<SoloZoneamento> solosAptos,
+            String produtoReferencia,
+            BigDecimal precoAtualReferencia,
+            String unidadeComercializacao,
+            LocalDate dataUltimaCotacao,
+            BigDecimal variacao30DiasPercentual,
+            BigDecimal variacao90DiasPercentual,
+            BigDecimal variacao180DiasPercentual,
+            String pracaReferencia,
+            String fonteReferencia,
+            boolean fallbackEstadual,
+            boolean possuiHistoricoPam,
+            Integer ultimoAnoPam,
+            Integer rendimentoMedioPamKgHa,
+            List<String> justificativas,
+            List<String> avisosMetodologicos
+    ) {
+        this(
+                culturaId,
+                nomeCultura,
+                nomeCientifico,
+                grupoAgricola,
+                posicaoRanking,
+                notaFinal,
+                pontosPorCriterio,
+                riscoMinimoZarc,
+                quantidadeDecendiosFavoraveis,
+                quantidadeSolosAptos,
+                quantidadeCiclosAptos,
+                melhorPeriodoPlantio,
+                recomendacaoMelhorPeriodo,
+                soloProjecao,
+                solosAptos,
+                produtoReferencia,
+                precoAtualReferencia,
+                unidadeComercializacao,
+                dataUltimaCotacao,
+                variacao30DiasPercentual,
+                variacao90DiasPercentual,
+                variacao180DiasPercentual,
+                pracaReferencia,
+                fonteReferencia,
+                fallbackEstadual,
+                possuiHistoricoPam,
+                ultimoAnoPam,
+                rendimentoMedioPamKgHa,
+                null,
+                justificativas,
+                avisosMetodologicos
+        );
     }
 
     public ScoreOportunidade(
@@ -120,6 +188,7 @@ public record ScoreOportunidade(
                 possuiHistoricoPam,
                 ultimoAnoPam,
                 rendimentoMedioPamKgHa,
+                null,
                 justificativas,
                 avisosMetodologicos
         );
@@ -182,6 +251,7 @@ public record ScoreOportunidade(
                 possuiHistoricoPam,
                 ultimoAnoPam,
                 rendimentoMedioPamKgHa,
+                null,
                 justificativas,
                 avisosMetodologicos
         );
@@ -220,6 +290,7 @@ public record ScoreOportunidade(
                 possuiHistoricoPam,
                 ultimoAnoPam,
                 rendimentoMedioPamKgHa,
+                projecaoEconomica,
                 justificativas,
                 avisosMetodologicos
         );

@@ -44,7 +44,8 @@ public class ConsultarDashboardService implements ConsultarDashboardUseCase {
 
         RankingOportunidadesResultado ranking = calcularRankingUseCase.calcularRankingPorMunicipioEPeriodo(
                 filtro.codigoIbge(),
-                filtro.periodoPlantio()
+                filtro.periodoPlantio(),
+                filtro.areaHa()
         );
 
         Municipio municipio = zoneamento.municipio();

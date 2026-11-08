@@ -172,7 +172,7 @@ class ComparadorCulturasControllerTest {
                         new BigDecimal("3.00"), new BigDecimal("5.00"), new BigDecimal("8.00"),
                         List.of(), List.of()
                 ),
-                new ScoreMotorDecisaoComparacao(true, posicao, nota, new PontuacaoCriterios(30, 12, 28, 15), List.of()),
+                new ScoreMotorDecisaoComparacao(true, posicao, nota, new PontuacaoCriterios(30, 12, 18, 10, 15), List.of()),
                 new IndicadoresProdutivosComparacao(true, 2025, 3800, 3700, 15000, 57000, "Aviso")
         );
     }

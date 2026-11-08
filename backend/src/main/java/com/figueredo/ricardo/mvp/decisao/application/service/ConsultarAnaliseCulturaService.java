@@ -145,7 +145,8 @@ public class ConsultarAnaliseCulturaService implements ConsultarAnaliseCulturaUs
 
         RankingOportunidadesResultado rankingMunicipio = calcularRankingUseCase.calcularRankingPorMunicipioEPeriodo(
                 municipio.codigoIbge(),
-                filtro.periodoPlantio()
+                filtro.periodoPlantio(),
+                filtro.areaHa()
         );
 
         ScoreOportunidade scoreDaCultura = rankingMunicipio.oportunidades().stream()

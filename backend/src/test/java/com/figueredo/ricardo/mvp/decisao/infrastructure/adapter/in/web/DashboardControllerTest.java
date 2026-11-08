@@ -85,7 +85,7 @@ class DashboardControllerTest {
         );
         ScoreOportunidade score = new ScoreOportunidade(
                 1L, "Soja", "Glycine max", "GRAOS", 1, 80,
-                new PontuacaoCriterios(30, 8, 27, 15), 20, 1, 1, 1,
+                new PontuacaoCriterios(30, 8, 17, 10, 15), 20, 1, 1, 1,
                 melhorDecendio, recomendacao,
                 "Soja industrial", new BigDecimal("125.00"), "Saca",
                 LocalDate.of(2026, 10, 30), new BigDecimal("4.20"), new BigDecimal("6.10"), new BigDecimal("9.00"),
@@ -139,18 +139,19 @@ class DashboardControllerTest {
         String codigoIbge = "4204806";
         YearMonth mesInicio = YearMonth.now();
         YearMonth mesFim = mesInicio.plusMonths(3);
+        BigDecimal areaHa = new BigDecimal("10.00");
         ConsultarDashboardRequest request = new ConsultarDashboardRequest(
                 codigoIbge,
                 mesInicio.toString(),
                 mesFim.toString(),
                 null,
-                null
+                areaHa
         );
         FiltroDashboard filtro = new FiltroDashboard(
                 codigoIbge,
                 new PeriodoPlantioMeses(mesInicio, mesFim),
                 null,
-                null
+                areaHa
         );
 
         MunicipioDashboard municipio = new MunicipioDashboard(
@@ -173,7 +174,7 @@ class DashboardControllerTest {
         );
         ScoreOportunidade score = new ScoreOportunidade(
                 1L, "Soja", "Glycine max", "GRAOS", 1, 80,
-                new PontuacaoCriterios(30, 8, 27, 15), 20, 1, 2, 1,
+                new PontuacaoCriterios(30, 8, 17, 10, 15), 20, 1, 2, 1,
                 melhorDecendio, recomendacao, solo2, List.of(solo2, solo3),
                 "Soja industrial", new BigDecimal("125.00"), "Saca",
                 LocalDate.of(2026, 10, 30), new BigDecimal("4.20"), new BigDecimal("6.10"), new BigDecimal("9.00"),
@@ -193,7 +194,7 @@ class DashboardControllerTest {
                         2025,
                         2026,
                         "2025/2026",
-                        null,
+                        areaHa,
                         score,
                         List.of(culturaPossivel),
                         List.of(score),

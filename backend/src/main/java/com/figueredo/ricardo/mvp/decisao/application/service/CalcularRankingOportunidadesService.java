@@ -17,6 +17,7 @@ import com.figueredo.ricardo.mvp.zarc.domain.model.TipoSoloZarc;
 import com.figueredo.ricardo.mvp.zarc.domain.model.ZoneamentoMunicipioResultado;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 public class CalcularRankingOportunidadesService implements CalcularRankingOportunidadesUseCase {
 
     private static final String AVISO_GERAL_RANKING =
-            "O ranking de oportunidades cruza viabilidade climática (ZARC), comportamento percentual de preços (Epagri/Cepa) e histórico produtivo municipal (IBGE/PAM). O preço nominal bruto não é utilizado no cálculo das notas.";
+            "O ranking de oportunidades cruza segurança climática (ZARC), amplitude da janela de plantio, tendência de preços (Epagri/Cepa), potencial de receita bruta municipal (IBGE/PAM) e qualidade dos dados oficiais.";
 
     private static final String AVISO_SEM_CULTURAS_APTAS =
             "Nenhuma cultura com janela favorável no ZARC foi encontrada para o município e safra consultados.";
@@ -62,7 +63,7 @@ public class CalcularRankingOportunidadesService implements CalcularRankingOport
                 filtro.safraFim()
         );
 
-        return calcularAPartirDoZoneamento(zoneamentoResultado);
+        return calcularAPartirDoZoneamento(zoneamentoResultado, filtro.areaHa());
     }
 
     @Override
@@ -70,13 +71,22 @@ public class CalcularRankingOportunidadesService implements CalcularRankingOport
             String codigoIbge,
             PeriodoPlantioMeses periodo
     ) {
-        FiltroRankingOportunidades validacao = new FiltroRankingOportunidades(codigoIbge, null, null);
+        return calcularRankingPorMunicipioEPeriodo(codigoIbge, periodo, BigDecimal.ONE);
+    }
+
+    @Override
+    public RankingOportunidadesResultado calcularRankingPorMunicipioEPeriodo(
+            String codigoIbge,
+            PeriodoPlantioMeses periodo,
+            BigDecimal areaHa
+    ) {
+        FiltroRankingOportunidades validacao = new FiltroRankingOportunidades(codigoIbge, null, null, areaHa);
         ZoneamentoMunicipioResultado zoneamentoResultado = consultarZoneamentoUseCase.consultarAptasPorMunicipioEPeriodo(
                 validacao.codigoIbge(),
                 periodo
         );
 
-        return calcularAPartirDoZoneamento(zoneamentoResultado);
+        return calcularAPartirDoZoneamento(zoneamentoResultado, validacao.areaHa());
     }
 
     @Override
@@ -85,19 +95,32 @@ public class CalcularRankingOportunidadesService implements CalcularRankingOport
             PeriodoPlantioMeses periodo,
             TipoSoloZarc tipoSolo
     ) {
+        return calcularRankingPorMunicipioPeriodoESolo(codigoIbge, periodo, tipoSolo, BigDecimal.ONE);
+    }
+
+    @Override
+    public RankingOportunidadesResultado calcularRankingPorMunicipioPeriodoESolo(
+            String codigoIbge,
+            PeriodoPlantioMeses periodo,
+            TipoSoloZarc tipoSolo,
+            BigDecimal areaHa
+    ) {
         Objects.requireNonNull(periodo, "periodo é obrigatório");
         Objects.requireNonNull(tipoSolo, "tipoSolo é obrigatório");
-        FiltroRankingOportunidades validacao = new FiltroRankingOportunidades(codigoIbge, null, null);
+        FiltroRankingOportunidades validacao = new FiltroRankingOportunidades(codigoIbge, null, null, areaHa);
         ZoneamentoMunicipioResultado zoneamentoResultado = consultarZoneamentoUseCase.consultarAptasPorMunicipioPeriodoESolo(
                 validacao.codigoIbge(),
                 periodo,
                 tipoSolo
         );
 
-        return calcularAPartirDoZoneamento(zoneamentoResultado);
+        return calcularAPartirDoZoneamento(zoneamentoResultado, validacao.areaHa());
     }
 
-    private RankingOportunidadesResultado calcularAPartirDoZoneamento(ZoneamentoMunicipioResultado zoneamentoResultado) {
+    private RankingOportunidadesResultado calcularAPartirDoZoneamento(
+            ZoneamentoMunicipioResultado zoneamentoResultado,
+            BigDecimal areaHa
+    ) {
         Municipio municipio = zoneamentoResultado.municipio();
         List<CulturaZoneamentoConsolidado> culturasAptas = zoneamentoResultado.culturasAptas();
 
@@ -151,6 +174,7 @@ public class CalcularRankingOportunidadesService implements CalcularRankingOport
                     culturaZarc,
                     mercadoDaCultura,
                     pamDaCultura,
+                    areaHa,
                     dataReferenciaCotacao
             );
             scoresCalculados.add(score);
@@ -207,6 +231,10 @@ public class CalcularRankingOportunidadesService implements CalcularRankingOport
         return Comparator
                 .comparingInt(ScoreOportunidade::notaFinal).reversed()
                 .thenComparingInt(ScoreOportunidade::riscoMinimoZarc)
+                .thenComparing(
+                        (ScoreOportunidade s) -> s.pontosPorCriterio().potencialReceita(),
+                        Comparator.reverseOrder()
+                )
                 .thenComparing(
                         (ScoreOportunidade s) -> s.pontosPorCriterio().dinamicaPrecos(),
                         Comparator.reverseOrder()
