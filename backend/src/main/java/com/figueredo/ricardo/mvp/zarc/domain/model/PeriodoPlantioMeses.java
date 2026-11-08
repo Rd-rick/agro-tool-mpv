@@ -22,7 +22,7 @@ public record PeriodoPlantioMeses(
         if (mesFim.isBefore(mesInicio)) {
             throw new IllegalArgumentException("mesFim não pode ser anterior a mesInicio");
         }
-        if (ChronoUnit.MONTHS.between(mesInicio, mesFim) >= 12) {
+        if (ChronoUnit.MONTHS.between(mesInicio, mesFim) > 12) {
             throw new IllegalArgumentException("O período de plantio não deve exceder 12 meses");
         }
     }
@@ -60,14 +60,14 @@ public record PeriodoPlantioMeses(
         }
         if (fimVazio) {
             YearMonth inicio = parseAnoMes(mesInicioTexto, "mesInicio");
-            if (inicio.isBefore(referencia)) {
+            if (mesAtualReferencia != null && inicio.isBefore(mesAtualReferencia)) {
                 throw new IllegalArgumentException(
-                        "mesInicio deve ser maior ou igual ao mês atual (" + referencia + ")"
+                        "mesInicio deve ser maior ou igual ao mês atual (" + mesAtualReferencia + ")"
                 );
             }
             return new PeriodoPlantioMeses(inicio, inicio.plusMonths(3));
         }
-        return deTexto(mesInicioTexto, mesFimTexto, referencia);
+        return deTexto(mesInicioTexto, mesFimTexto, mesAtualReferencia);
     }
 
     public boolean contemMes(int mes) {

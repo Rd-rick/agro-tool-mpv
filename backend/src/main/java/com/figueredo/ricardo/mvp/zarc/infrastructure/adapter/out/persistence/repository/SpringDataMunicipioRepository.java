@@ -13,4 +13,6 @@ public interface SpringDataMunicipioRepository extends JpaRepository<MunicipioEn
     List<MunicipioEntity> findAllByOrderByNomeAsc();
 
     Optional<MunicipioEntity> findByCodigoIbge(String codigoIbge);
+
+    Optional<MunicipioEntity> findByNomeIgnoreCase(String nome);
 }

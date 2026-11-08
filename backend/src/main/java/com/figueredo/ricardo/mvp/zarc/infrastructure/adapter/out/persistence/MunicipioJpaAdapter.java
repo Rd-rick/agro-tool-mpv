@@ -51,6 +51,16 @@ public class MunicipioJpaAdapter implements MunicipioPort {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<Municipio> buscarPorNome(String nome) {
+        if (nome == null || nome.isBlank()) {
+            return Optional.empty();
+        }
+        return repository.findByNomeIgnoreCase(nome.trim())
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<Long> buscarIdPorCodigoIbge(String codigoIbge) {
         return repository.findByCodigoIbge(codigoIbge)
                 .map(MunicipioEntity::getId);

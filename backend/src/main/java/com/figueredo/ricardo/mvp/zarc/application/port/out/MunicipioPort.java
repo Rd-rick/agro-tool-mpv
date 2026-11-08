@@ -14,5 +14,7 @@ public interface MunicipioPort {
 
     Optional<Municipio> buscarPorCodigoIbge(String codigoIbge);
 
+    Optional<Municipio> buscarPorNome(String nome);
+
     Optional<Long> buscarIdPorCodigoIbge(String codigoIbge);
 }
