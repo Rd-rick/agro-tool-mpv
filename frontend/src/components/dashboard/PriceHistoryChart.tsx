@@ -26,25 +26,51 @@ export const PriceHistoryChart: React.FC<PriceHistoryChartProps> = ({ data }) =>
   const selectedCultura =
     oportunidades.find((o) => o.culturaId === selectedCulturaId) || oportunidades[0];
 
+  const hasPriceData = Boolean(
+    selectedCultura &&
+    selectedCultura.precoAtualReferencia !== null &&
+    selectedCultura.precoAtualReferencia !== undefined &&
+    selectedCultura.precoAtualReferencia > 0
+  );
+
   const chartData = useMemo(() => {
-    const basePrice = selectedCultura?.precoAtualReferencia || 120;
-    const variation = (selectedCultura?.variacao30d || 2.5) / 100;
     const pointsCount = periodo === '30' ? 6 : periodo === '90' ? 10 : 16;
-    const items = [];
+    const intervalDays = periodo === '30' ? 5 : periodo === '90' ? 9 : 12;
     const now = new Date();
 
-    for (let i = pointsCount - 1; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i * (periodo === '30' ? 5 : periodo === '90' ? 9 : 12));
-      const factor = 1 - (i / pointsCount) * variation + Math.sin(i * 1.5) * 0.02;
-      const val = Math.round(basePrice * factor * 100) / 100;
-      items.push({
-        date: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-        preco: val,
+    if (!hasPriceData) {
+      return Array.from({ length: pointsCount }, (_, index) => {
+        const offset = pointsCount - 1 - index;
+        const d = new Date(now);
+        d.setDate(d.getDate() - offset * intervalDays);
+        return {
+          date: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+          preco: 0,
+        };
       });
     }
-    return items;
-  }, [selectedCultura, periodo]);
+
+    const basePrice = selectedCultura!.precoAtualReferencia!;
+    const rawVariation =
+      periodo === '30'
+        ? (selectedCultura?.variacao30d ?? 2.5)
+        : periodo === '90'
+        ? (selectedCultura?.variacao90d ?? selectedCultura?.variacao30d ?? 4.0)
+        : (selectedCultura?.variacao180d ?? selectedCultura?.variacao90d ?? 6.0);
+    const variation = rawVariation / 100;
+
+    return Array.from({ length: pointsCount }, (_, index) => {
+      const offset = pointsCount - 1 - index;
+      const d = new Date(now);
+      d.setDate(d.getDate() - offset * intervalDays);
+      const factor = 1 - (offset / pointsCount) * variation + Math.sin(offset * 1.5) * 0.02;
+      const val = Math.max(0, Math.round(basePrice * factor * 100) / 100);
+      return {
+        date: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+        preco: val,
+      };
+    });
+  }, [selectedCultura, periodo, hasPriceData]);
 
   return (
     <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-soft flex flex-col justify-between h-full">
@@ -57,7 +83,9 @@ export const PriceHistoryChart: React.FC<PriceHistoryChartProps> = ({ data }) =>
             </h3>
           </div>
           <span className="text-xs text-slate-600 font-medium block mt-0.5">
-            {selectedCultura?.unidadeMedida || 'R$/saca 60kg'} • {selectedCultura?.fonte || 'Epagri/Cepa'}
+            {hasPriceData
+              ? `${selectedCultura?.unidadeMedida || 'R$/saca 60kg'} • ${selectedCultura?.fonte || 'Epagri/Cepa'}`
+              : 'Sem cotação registrada'}
           </span>
         </div>
 
@@ -66,13 +94,18 @@ export const PriceHistoryChart: React.FC<PriceHistoryChartProps> = ({ data }) =>
             <select
               value={selectedCulturaId}
               onChange={(e) => setSelectedCulturaId(Number(e.target.value))}
-              className="appearance-none pl-3.5 pr-8 py-1.5 text-xs font-semibold bg-brand-50 text-brand-900 rounded-full border border-brand-200 focus:outline-none cursor-pointer"
+              disabled={oportunidades.length === 0}
+              className="appearance-none pl-3.5 pr-8 py-1.5 text-xs font-semibold bg-brand-50 text-brand-900 rounded-full border border-brand-200 focus:outline-none cursor-pointer disabled:opacity-50"
             >
-              {oportunidades.map((op) => (
-                <option key={op.culturaId} value={op.culturaId}>
-                  {op.nomeCultura}
-                </option>
-              ))}
+              {oportunidades.length > 0 ? (
+                oportunidades.map((op) => (
+                  <option key={op.culturaId} value={op.culturaId}>
+                    {op.nomeCultura}
+                  </option>
+                ))
+              ) : (
+                <option value={0}>Sem culturas disponíveis</option>
+              )}
             </select>
             <ChevronDown className="w-3.5 h-3.5 text-brand-700 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
@@ -116,7 +149,7 @@ export const PriceHistoryChart: React.FC<PriceHistoryChartProps> = ({ data }) =>
               tickLine={false}
               axisLine={false}
               tick={{ fontSize: 11, fill: '#64748b' }}
-              domain={['auto', 'auto']}
+              domain={hasPriceData ? ['auto', 'auto'] : [0, 50]}
               tickFormatter={(v) => `R$${v}`}
             />
             <Tooltip
@@ -138,10 +171,10 @@ export const PriceHistoryChart: React.FC<PriceHistoryChartProps> = ({ data }) =>
             <Area
               type="monotone"
               dataKey="preco"
-              stroke="#059669"
+              stroke={hasPriceData ? '#059669' : '#94a3b8'}
               strokeWidth={2.5}
               fillOpacity={1}
-              fill="url(#colorPreco)"
+              fill={hasPriceData ? 'url(#colorPreco)' : 'transparent'}
             />
           </AreaChart>
         </ResponsiveContainer>
