@@ -81,7 +81,7 @@ class ConsultarDashboardServiceTest {
                 "GRAOS",
                 1,
                 84,
-                new PontuacaoCriterios(31, 8, 30, 15),
+                new PontuacaoCriterios(31, 8, 20, 10, 15),
                 20,
                 2,
                 1,
@@ -107,7 +107,7 @@ class ConsultarDashboardServiceTest {
                 List.of("Aviso")
         );
 
-        when(calcularRankingUseCase.calcularRankingPorMunicipioEPeriodo(codigoIbge, periodo))
+        when(calcularRankingUseCase.calcularRankingPorMunicipioEPeriodo(codigoIbge, periodo, new BigDecimal("50.00")))
                 .thenReturn(new RankingOportunidadesResultado(
                         codigoIbge,
                         "Curitibanos",
@@ -135,7 +135,7 @@ class ConsultarDashboardServiceTest {
         assertEquals(1, resultado.culturasPossiveis().size());
         assertEquals("01 a 10 de Outubro a 11 a 20 de Outubro (2 decêndios)", resultado.culturasPossiveis().get(0).epocaPlantioResumo());
         assertEquals(
-                "O melhor período de plantio é de 01 a 10 de Outubro (risco de 20%) para Solo de textura média",
+                "De 01 a 10 de Outubro (risco de 20%) para Solo de textura média",
                 resultado.culturasPossiveis().get(0).recomendacaoMelhorPeriodo()
         );
         assertEquals(1, resultado.rankingOportunidades().size());

@@ -92,7 +92,7 @@ class CompararCulturasServiceTest {
 
         ScoreOportunidade scoreSoja = new ScoreOportunidade(
                 1L, "Soja", "Glycine max", "GRAOS", 1, 82,
-                new PontuacaoCriterios(31, 8, 28, 15), 20, 1, 1, 1,
+                new PontuacaoCriterios(31, 8, 20, 8, 15), 20, 1, 1, 1,
                 sojaZarc.melhorPeriodoPlantio(), sojaZarc.recomendacaoMelhorPeriodo(),
                 sojaZarc.soloProjecao(), sojaZarc.tiposSolo(),
                 "Soja industrial", new BigDecimal("125.00"), "Saca", LocalDate.of(2026, 10, 30),
@@ -119,7 +119,7 @@ class CompararCulturasServiceTest {
         assertEquals("Soja", resultado.culturasComparadas().get(0).nomeCultura());
         assertTrue(resultado.culturasComparadas().get(0).viabilidadeZoneamento().aptaZarc());
         assertEquals(
-                "O melhor período de plantio é de 01 a 10 de Outubro (risco de 20%) para Solo de textura média",
+                "De 01 a 10 de Outubro (risco de 20%) para Solo de textura média",
                 resultado.culturasComparadas().get(0).janelasPlantio().recomendacaoMelhorPeriodo()
         );
         assertEquals(82, resultado.culturasComparadas().get(0).scoreMotorDecisao().notaFinal());

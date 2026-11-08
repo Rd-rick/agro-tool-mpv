@@ -87,11 +87,17 @@ public record PeriodoDecendio(
     }
 
     public String formatarRecomendacaoSolo(String descricaoSolo) {
-        String soloFormatado = descricaoSolo != null && !descricaoSolo.isBlank()
-                ? descricaoSolo.trim()
-                : "o solo selecionado";
+        String soloFormatado;
+        if (descricaoSolo == null || descricaoSolo.isBlank()) {
+            soloFormatado = "o solo selecionado";
+        } else {
+            String texto = descricaoSolo.trim();
+            soloFormatado = TipoSoloZarc.buscarPorCodigoOuNome(texto)
+                    .map(TipoSoloZarc::getTipoSolo)
+                    .orElse(texto);
+        }
         return String.format(
-                "O melhor período de plantio é de %s (risco de %d%%) para %s",
+                "De %s (risco de %d%%) para %s",
                 descricaoPeriodo(),
                 menorRisco,
                 soloFormatado

@@ -134,7 +134,7 @@ class ConsultarZoneamentoMunicipioServiceTest {
         assertEquals("3", milho.soloProjecao().codigo());
         assertEquals("Solo argiloso", milho.soloProjecao().tipoSolo());
         assertEquals(
-                "O melhor período de plantio é de 01 a 10 de Janeiro (risco de 20%) para Solo argiloso",
+                "De 01 a 10 de Janeiro (risco de 20%) para Solo argiloso",
                 milho.recomendacaoMelhorPeriodo()
         );
 
@@ -195,7 +195,7 @@ class ConsultarZoneamentoMunicipioServiceTest {
         assertEquals(2, soja.melhorPeriodoPlantio().decendio());
         assertEquals(20, soja.melhorPeriodoPlantio().menorRisco());
         assertEquals(
-                "O melhor período de plantio é de 11 a 20 de Janeiro (risco de 20%) para Solo de textura média",
+                "De 11 a 20 de Janeiro (risco de 20%) para Solo de textura média",
                 soja.recomendacaoMelhorPeriodo()
         );
     }

@@ -2,6 +2,7 @@ package com.figueredo.ricardo.mvp.decisao.domain.service;
 
 import com.figueredo.ricardo.mvp.decisao.domain.model.HistoricoPamCultura;
 import com.figueredo.ricardo.mvp.decisao.domain.model.ScoreOportunidade;
+import com.figueredo.ricardo.mvp.decisao.domain.model.StatusProjecaoProducao;
 import com.figueredo.ricardo.mvp.mercado.domain.model.CulturaMercadoResultado;
 import com.figueredo.ricardo.mvp.mercado.domain.model.OrigemCotacao;
 import com.figueredo.ricardo.mvp.mercado.domain.model.ProdutoMercadoAnalise;
@@ -53,31 +54,37 @@ class CalculadoraPontuacaoOportunidadeTest {
         );
 
         CulturaMercadoResultado mercado = new CulturaMercadoResultado(1L, "Soja", List.of(sojaMercado));
-        HistoricoPamCultura pam = new HistoricoPamCultura(1L, true, 2025, 18000, 68400, 3800);
+        HistoricoPamCultura pam = new HistoricoPamCultura(1L, true, 2025, 18000, 90000, 5000);
 
-        ScoreOportunidade score = calculadora.calcular(sojaZarc, mercado, pam, dataRef);
+        ScoreOportunidade score = calculadora.calcular(sojaZarc, mercado, pam, new BigDecimal("10.00"), dataRef);
 
-        assertEquals(35, score.pontosPorCriterio().segurancaClimatica());
-        assertEquals(20, score.pontosPorCriterio().janelaPlantio());
-        assertEquals(30, score.pontosPorCriterio().dinamicaPrecos());
+        assertEquals(40, score.pontosPorCriterio().segurancaClimatica());
+        assertEquals(15, score.pontosPorCriterio().janelaPlantio());
+        assertEquals(20, score.pontosPorCriterio().dinamicaPrecos());
+        assertEquals(10, score.pontosPorCriterio().potencialReceita());
         assertEquals(15, score.pontosPorCriterio().qualidadeInformacao());
         assertEquals(100, score.notaFinal());
         assertNotNull(score.melhorPeriodoPlantio());
         assertEquals(1, score.melhorPeriodoPlantio().decendio());
         assertEquals(
-                "O melhor período de plantio é de 01 a 10 de Janeiro (risco de 20%) para Solo arenoso",
+                "De 01 a 10 de Janeiro (risco de 20%) para Solo arenoso",
                 score.recomendacaoMelhorPeriodo()
         );
         assertEquals("Soja industrial", score.produtoReferencia());
         assertEquals("Meio Oeste", score.pracaReferencia());
         assertFalse(score.fallbackEstadual());
         assertTrue(score.possuiHistoricoPam());
-        assertEquals(4, score.justificativas().size());
+        assertNotNull(score.projecaoEconomica());
+        assertEquals(StatusProjecaoProducao.CALCULADO_COM_SUCESSO, score.projecaoEconomica().status());
+        assertEquals(new BigDecimal("833.30"), score.projecaoEconomica().producaoTotalEstimada());
+        assertEquals(new BigDecimal("10416.25"), score.projecaoEconomica().receitaBrutaPorHa());
+        assertEquals(new BigDecimal("104162.50"), score.projecaoEconomica().receitaBrutaTotal());
+        assertEquals(5, score.justificativas().size());
         assertEquals(2, score.avisosMetodologicos().size());
     }
 
     @Test
-    void naoDeveAlterarPontuacaoQuandoPrecoNominalBrutoForDiferenteComMesmaVariacaoPercentual() {
+    void devePontuarPotencialDeReceitaBrutaBaseadoNoRendimentoMunicipalECotacao() {
         LocalDate dataRef = LocalDate.of(2026, 10, 30);
 
         CulturaZoneamentoConsolidado zarcMilho = criarCulturaZarc(
@@ -98,7 +105,7 @@ class CalculadoraPontuacaoOportunidadeTest {
                 2
         );
 
-        ProdutoMercadoAnalise produtoPrecoBaixo = criarProdutoAnalise(
+        ProdutoMercadoAnalise produtoMilho = criarProdutoAnalise(
                 20L,
                 "Milho amarelo",
                 new BigDecimal("55.00"),
@@ -110,7 +117,7 @@ class CalculadoraPontuacaoOportunidadeTest {
                 "Meio Oeste"
         );
 
-        ProdutoMercadoAnalise produtoPrecoAlto = criarProdutoAnalise(
+        ProdutoMercadoAnalise produtoFeijao = criarProdutoAnalise(
                 30L,
                 "Feijão preto",
                 new BigDecimal("320.00"),
@@ -127,15 +134,17 @@ class CalculadoraPontuacaoOportunidadeTest {
 
         ScoreOportunidade scoreMilho = calculadora.calcular(
                 zarcMilho,
-                new CulturaMercadoResultado(2L, "Milho", List.of(produtoPrecoBaixo)),
+                new CulturaMercadoResultado(2L, "Milho", List.of(produtoMilho)),
                 pamMilho,
+                new BigDecimal("10.00"),
                 dataRef
         );
 
         ScoreOportunidade scoreFeijao = calculadora.calcular(
                 zarcFeijao,
-                new CulturaMercadoResultado(3L, "Feijão", List.of(produtoPrecoAlto)),
+                new CulturaMercadoResultado(3L, "Feijão", List.of(produtoFeijao)),
                 pamFeijao,
+                new BigDecimal("10.00"),
                 dataRef
         );
 
@@ -143,7 +152,10 @@ class CalculadoraPontuacaoOportunidadeTest {
                 scoreMilho.pontosPorCriterio().dinamicaPrecos(),
                 scoreFeijao.pontosPorCriterio().dinamicaPrecos()
         );
-        assertEquals(scoreMilho.notaFinal(), scoreFeijao.notaFinal());
+        assertEquals(6, scoreMilho.pontosPorCriterio().potencialReceita());
+        assertEquals(10, scoreFeijao.pontosPorCriterio().potencialReceita());
+        assertEquals(new BigDecimal("7333.15"), scoreMilho.projecaoEconomica().receitaBrutaPorHa());
+        assertEquals(new BigDecimal("10665.60"), scoreFeijao.projecaoEconomica().receitaBrutaPorHa());
     }
 
     @Test
@@ -189,6 +201,7 @@ class CalculadoraPontuacaoOportunidadeTest {
                 trigoZarc,
                 new CulturaMercadoResultado(4L, "Trigo", List.of(prodRegional)),
                 pam,
+                new BigDecimal("10.00"),
                 dataRef
         );
 
@@ -196,6 +209,7 @@ class CalculadoraPontuacaoOportunidadeTest {
                 trigoZarc,
                 new CulturaMercadoResultado(4L, "Trigo", List.of(prodFallback)),
                 pam,
+                new BigDecimal("10.00"),
                 dataRef
         );
 
@@ -208,7 +222,7 @@ class CalculadoraPontuacaoOportunidadeTest {
     }
 
     @Test
-    void deveZerarDinamicaDePrecosEGerarAvisosQuandoCulturaNaoTiverCotacaoNemPam() {
+    void deveZerarDinamicaDePrecosEPotencialReceitaQuandoCulturaNaoTiverCotacaoNemPam() {
         LocalDate dataRef = LocalDate.of(2026, 10, 30);
 
         CulturaZoneamentoConsolidado aveiaZarc = criarCulturaZarc(
@@ -224,15 +238,18 @@ class CalculadoraPontuacaoOportunidadeTest {
                 aveiaZarc,
                 new CulturaMercadoResultado(8L, "Aveia", List.of()),
                 HistoricoPamCultura.semHistorico(8L),
+                new BigDecimal("10.00"),
                 dataRef
         );
 
-        assertEquals(15, score.pontosPorCriterio().segurancaClimatica());
-        assertEquals(4, score.pontosPorCriterio().janelaPlantio());
+        assertEquals(18, score.pontosPorCriterio().segurancaClimatica());
+        assertEquals(3, score.pontosPorCriterio().janelaPlantio());
         assertEquals(0, score.pontosPorCriterio().dinamicaPrecos());
+        assertEquals(0, score.pontosPorCriterio().potencialReceita());
         assertEquals(0, score.pontosPorCriterio().qualidadeInformacao());
-        assertEquals(19, score.notaFinal());
+        assertEquals(21, score.notaFinal());
         assertNull(score.precoAtualReferencia());
+        assertEquals(StatusProjecaoProducao.INDISPONIVEL_SEM_HISTORICO_MUNICIPAL, score.projecaoEconomica().status());
         assertTrue(score.avisosMetodologicos().stream()
                 .anyMatch(a -> a.contains("sem cotação ativa na base da Epagri/Cepa")));
         assertTrue(score.avisosMetodologicos().stream()

@@ -205,7 +205,7 @@ class CalcularRankingOportunidadesServiceTest {
                 List.of(new CicloZoneamento("1", "Grupo I")),
                 List.of("Portaria Soja"),
                 PeriodoDecendio.deDecendio(1, Set.of(20)),
-                "O melhor período de plantio é de 01 a 10 de Janeiro (risco de 20%) para Solo de textura média"
+                "De 01 a 10 de Janeiro (risco de 20%) para Solo de textura média"
         );
 
         when(consultarZoneamentoUseCase.consultarAptasPorMunicipioPeriodoESolo(
@@ -246,7 +246,7 @@ class CalcularRankingOportunidadesServiceTest {
         assertEquals(1, ranking.oportunidades().size());
         assertEquals("Soja", ranking.melhorOportunidade().nomeCultura());
         assertEquals(
-                "O melhor período de plantio é de 01 a 10 de Janeiro (risco de 20%) para Solo de textura média",
+                "De 01 a 10 de Janeiro (risco de 20%) para Solo de textura média",
                 ranking.melhorOportunidade().recomendacaoMelhorPeriodo()
         );
     }

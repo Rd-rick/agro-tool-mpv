@@ -144,7 +144,7 @@ class ConsultarAnaliseCulturaServiceTest {
 
         ScoreOportunidade scoreSoja = new ScoreOportunidade(
                 1L, "Soja", "Glycine max", "GRAOS", 1, 86,
-                new PontuacaoCriterios(31, 10, 30, 15), 20, 1, 1, 1,
+                new PontuacaoCriterios(31, 10, 20, 10, 15), 20, 1, 1, 1,
                 sojaZarc.melhorPeriodoPlantio(), sojaZarc.recomendacaoMelhorPeriodo(),
                 "Soja industrial", new BigDecimal("126.00"), "Saca", dataCotacao,
                 new BigDecimal("5.00"), new BigDecimal("12.50"), new BigDecimal("14.55"),
@@ -153,14 +153,14 @@ class ConsultarAnaliseCulturaServiceTest {
         );
         ScoreOportunidade scoreMilho = new ScoreOportunidade(
                 2L, "Milho", "Zea mays", "GRAOS", 2, 74,
-                new PontuacaoCriterios(29, 10, 20, 15), 20, 4, 1, 1,
+                new PontuacaoCriterios(29, 10, 15, 5, 15), 20, 4, 1, 1,
                 "Milho amarelo", new BigDecimal("65.00"), "Saca", dataCotacao,
                 new BigDecimal("2.10"), new BigDecimal("4.00"), new BigDecimal("5.00"),
                 "Meio Oeste", "EPAGRI_CEPA", false, true, 2025, 7200,
                 List.of("Justificativa Milho"), List.of("Aviso Milho")
         );
 
-        when(calcularRankingUseCase.calcularRankingPorMunicipioEPeriodo(codigoIbge, periodo))
+        when(calcularRankingUseCase.calcularRankingPorMunicipioEPeriodo(codigoIbge, periodo, BigDecimal.ONE))
                 .thenReturn(new RankingOportunidadesResultado(
                         codigoIbge, "Curitibanos", "SC", "Meio Oeste", 2025, 2026,
                         List.of(scoreSoja, scoreMilho), List.of("Aviso")
@@ -179,7 +179,7 @@ class ConsultarAnaliseCulturaServiceTest {
         assertEquals("2025/2026", resultado.zoneamento().safra());
         assertEquals(TipoSoloZarc.SOLO_TEXTURA_MEDIA, resultado.zoneamento().soloSelecionado());
         assertEquals(
-                "O melhor período de plantio é de 01 a 10 de Outubro (risco de 20%) para Solo de textura média",
+                "De 01 a 10 de Outubro (risco de 20%) para Solo de textura média",
                 resultado.zoneamento().recomendacaoMelhorPeriodo()
         );
         assertEquals(36, resultado.zoneamento().matriz36Decendios().size());
