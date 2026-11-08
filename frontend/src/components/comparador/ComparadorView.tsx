@@ -4,6 +4,7 @@ import { formatCurrency, formatPercent, formatNumber } from '../../utils/formatt
 import { BadgeRisk } from '../common/BadgeRisk';
 import type { CompararCulturasResponse, CulturaPossivelDashboard } from '../../types/api';
 import { Cpu, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { cn } from '../../utils/cn';
 
 interface ComparadorViewProps {
   codigoIbge: string;
@@ -184,7 +185,10 @@ export const ComparadorView: React.FC<ComparadorViewProps> = ({
                       </div>
                       <div>
                         <span className="text-xs text-slate-500 block">Variação 30d</span>
-                        <span className="font-bold text-brand-700 tabular-nums">
+                        <span className={cn(
+                            "font-bold text-brand-700 tabular-nums", 
+                            (c.precosEVariacao.variacao30d ?? 0) >= 0 ? 'text-emerald-700' : 'text-rose-600'
+                          )}>
                           {formatPercent(c.precosEVariacao.variacao30d)}
                         </span>
                       </div>
