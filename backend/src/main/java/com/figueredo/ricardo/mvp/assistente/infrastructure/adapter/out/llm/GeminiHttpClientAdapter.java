@@ -14,6 +14,7 @@ import com.figueredo.ricardo.mvp.assistente.domain.model.RespostaAssistente;
 import com.figueredo.ricardo.mvp.assistente.domain.model.ResultadoFerramentaIa;
 import com.figueredo.ricardo.mvp.assistente.infrastructure.config.AssistenteAiProperties;
 import com.figueredo.ricardo.mvp.common.domain.exception.AssistenteIndisponivelException;
+import com.figueredo.ricardo.mvp.common.domain.exception.AssistenteQuotaExcedidaException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -191,17 +192,19 @@ public class GeminiHttpClientAdapter implements AssistenteLlmPort {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new AssistenteIndisponivelException(
-                        "Gemini API retornou status HTTP " + response.statusCode() + ": " + response.body()
-                );
+                String body = response.body() != null ? response.body().toUpperCase() : "";
+                if (response.statusCode() == 429 || body.contains("RESOURCE_EXHAUSTED") || body.contains("QUOTA_EXCEEDED") || body.contains("QUOTA")) {
+                    throw new AssistenteQuotaExcedidaException("Estamos temporariamente indisponíveis. Por favor, tente novamente amanhã.");
+                }
+                throw new AssistenteIndisponivelException("O assistente inteligente está temporariamente indisponível no momento.");
             }
 
             return objectMapper.readTree(response.body());
-        } catch (AssistenteIndisponivelException ex) {
+        } catch (AssistenteQuotaExcedidaException | AssistenteIndisponivelException ex) {
             throw ex;
         } catch (Exception ex) {
             throw new AssistenteIndisponivelException(
-                    "Não foi possível se comunicar com o assistente LLM (Google Gemini). Verifique a chave de API e conexão de rede.",
+                    "O assistente inteligente está temporariamente indisponível no momento.",
                     ex
             );
         }

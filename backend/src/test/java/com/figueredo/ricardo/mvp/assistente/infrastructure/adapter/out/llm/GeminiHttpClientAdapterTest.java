@@ -12,6 +12,7 @@ import com.figueredo.ricardo.mvp.assistente.domain.model.RespostaAssistente;
 import com.figueredo.ricardo.mvp.assistente.domain.model.ResultadoFerramentaIa;
 import com.figueredo.ricardo.mvp.assistente.infrastructure.config.AssistenteAiProperties;
 import com.figueredo.ricardo.mvp.common.domain.exception.AssistenteIndisponivelException;
+import com.figueredo.ricardo.mvp.common.domain.exception.AssistenteQuotaExcedidaException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -192,6 +193,22 @@ class GeminiHttpClientAdapterTest {
                 () -> adapter.enviarMensagem("System prompt", pergunta, List.of())
         );
         assertTrue(ex.getMessage().contains("Chave de API do Gemini não configurada"));
+    }
+
+    @Test
+    void deveLancarAssistenteQuotaExcedidaExceptionQuandoGeminiRetornar429() throws Exception {
+        when(httpResponse1.statusCode()).thenReturn(429);
+        when(httpResponse1.body()).thenReturn("{\"error\": {\"code\": 429, \"message\": \"RESOURCE_EXHAUSTED\"}}");
+        doReturn(httpResponse1).when(httpClient).send(any(HttpRequest.class), any());
+
+        ContextoProdutor contexto = new ContextoProdutor("4204809", null, null, null);
+        PerguntaProdutor pergunta = new PerguntaProdutor("Pergunta teste", contexto);
+
+        AssistenteQuotaExcedidaException ex = assertThrows(
+                AssistenteQuotaExcedidaException.class,
+                () -> adapter.enviarMensagem("System prompt", pergunta, List.of())
+        );
+        assertEquals("Estamos temporariamente indisponíveis. Por favor, tente novamente amanhã.", ex.getMessage());
     }
 
     @Test

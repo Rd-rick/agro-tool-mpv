@@ -56,6 +56,7 @@ class AssistenteControllerTest {
         PerguntaAssistenteRequest request = new PerguntaAssistenteRequest(
                 "Quais culturas têm menor risco climático?",
                 "4204809",
+                "Curitibanos",
                 inicio.toString(),
                 fim.toString(),
                 "2",
@@ -84,7 +85,8 @@ class AssistenteControllerTest {
     void deveDetectarViolacoesDeValidacaoQuandoCamposObrigatoriosForemInvalidos() {
         PerguntaAssistenteRequest requestInvalido = new PerguntaAssistenteRequest(
                 "",
-                "12345",
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -94,7 +96,22 @@ class AssistenteControllerTest {
         var violacoes = validator.validate(requestInvalido);
         assertFalse(violacoes.isEmpty());
         assertTrue(violacoes.stream().anyMatch(v -> v.getPropertyPath().toString().equals("texto")));
-        assertTrue(violacoes.stream().anyMatch(v -> v.getPropertyPath().toString().equals("codigoIbge")));
+    }
+
+    @Test
+    void devePermitirCodigoIbgeNuloNoRequest() {
+        PerguntaAssistenteRequest requestSemIbge = new PerguntaAssistenteRequest(
+                "Bom dia",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        var violacoes = validator.validate(requestSemIbge);
+        assertTrue(violacoes.isEmpty());
     }
 
     @Test
@@ -102,6 +119,7 @@ class AssistenteControllerTest {
         PerguntaAssistenteRequest request = new PerguntaAssistenteRequest(
                 "Pergunta teste",
                 "4204809",
+                null,
                 null,
                 null,
                 null,

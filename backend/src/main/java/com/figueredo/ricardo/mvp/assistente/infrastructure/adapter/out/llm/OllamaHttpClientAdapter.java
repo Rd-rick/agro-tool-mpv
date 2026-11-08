@@ -158,9 +158,7 @@ public class OllamaHttpClientAdapter implements AssistenteLlmPort {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new AssistenteIndisponivelException(
-                        "Ollama retornou status HTTP " + response.statusCode() + ": " + response.body()
-                );
+                throw new AssistenteIndisponivelException("O assistente inteligente está temporariamente indisponível no momento.");
             }
 
             return objectMapper.readTree(response.body());
@@ -168,7 +166,7 @@ public class OllamaHttpClientAdapter implements AssistenteLlmPort {
             throw ex;
         } catch (Exception ex) {
             throw new AssistenteIndisponivelException(
-                    "Não foi possível se comunicar com o assistente LLM local (Ollama). Verifique se o serviço está ativo.",
+                    "O assistente inteligente está temporariamente indisponível no momento.",
                     ex
             );
         }

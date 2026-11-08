@@ -167,7 +167,6 @@ class OllamaHttpClientAdapterTest {
     @Test
     void deveLancarAssistenteIndisponivelExceptionQuandoOllamaRetornarErroHttp() throws Exception {
         when(httpResponse1.statusCode()).thenReturn(500);
-        when(httpResponse1.body()).thenReturn("Internal Server Error");
         doReturn(httpResponse1).when(httpClient).send(any(HttpRequest.class), any());
 
         ContextoProdutor contexto = new ContextoProdutor("4204809", null, null, null);

@@ -172,7 +172,16 @@ public class ExecutorFerramentasAgroService implements AgroToolFunctionsExecutor
     }
 
     private PeriodoPlantioMeses resolverPeriodo(String mesInicio, String mesFim) {
-        return PeriodoPlantioMeses.resolverOuPadrao(mesInicio, mesFim, null);
+        if ((mesInicio == null || mesInicio.isBlank()) && (mesFim == null || mesFim.isBlank())) {
+            return PeriodoPlantioMeses.resolverOuPadrao(null, null, null);
+        }
+        try {
+            String inicio = mesInicio != null ? mesInicio.trim().replace('/', '-') : null;
+            String fim = mesFim != null ? mesFim.trim().replace('/', '-') : null;
+            return PeriodoPlantioMeses.resolverOuPadrao(inicio, fim, null);
+        } catch (Exception ex) {
+            return PeriodoPlantioMeses.resolverOuPadrao(null, null, null);
+        }
     }
 
     private Optional<TipoSoloZarc> resolverTipoSolo(String soloTexto) {

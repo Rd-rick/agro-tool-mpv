@@ -14,6 +14,7 @@ import com.figueredo.ricardo.mvp.decisao.application.port.in.CalcularRankingOpor
 import com.figueredo.ricardo.mvp.decisao.application.port.in.CompararCulturasUseCase;
 import com.figueredo.ricardo.mvp.decisao.application.port.in.ConsultarAnaliseCulturaUseCase;
 import com.figueredo.ricardo.mvp.zarc.application.port.in.ConsultarZoneamentoMunicipioUseCase;
+import com.figueredo.ricardo.mvp.zarc.application.port.out.MunicipioPort;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,9 @@ class GeminiSpringContextTest {
 
     @MockitoBean
     private CompararCulturasUseCase compararCulturasUseCase;
+
+    @MockitoBean
+    private MunicipioPort municipioPort;
 
     @Autowired
     private PerguntarAssistenteUseCase perguntarAssistenteUseCase;
