@@ -368,15 +368,26 @@ export interface ChamadaFerramenta {
   argumentos: Record<string, unknown>;
 }
 
+export interface ContextoProdutorResponse {
+  codigoIbge?: string;
+  nomeMunicipio?: string;
+  mesInicio?: string;
+  mesFim?: string;
+  tipoSolo?: string;
+  areaHectares?: number;
+}
+
 export interface RespostaAssistenteResponse {
   resposta: string;
   ferramentasUtilizadas: ChamadaFerramenta[];
   fontesCitadas: string[];
+  contexto?: ContextoProdutorResponse;
 }
 
 export interface PerguntaAssistenteRequest {
   texto: string;
-  codigoIbge: string;
+  codigoIbge?: string;
+  nomeMunicipio?: string;
   mesInicio?: string;
   mesFim?: string;
   tipoSolo?: string;
@@ -389,3 +400,14 @@ export interface JobExecutionResponse {
   registrosProcessados?: number;
   detalhes?: string;
 }
+
+export type CondicaoTempo = 'ENSOLARADO' | 'NUBLADO' | 'CHOVENDO';
+
+export interface ClimaAtualResponse {
+  disponivel: boolean;
+  mensagem: string | null;
+  temperatura: number | null;
+  condicao: CondicaoTempo | null;
+  descricaoCondicao: string | null;
+}
+

@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts';
-import { TrendingUp, ChevronDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronDown } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 import type { DashboardResponse } from '../../types/api';
 
@@ -72,12 +72,30 @@ export const PriceHistoryChart: React.FC<PriceHistoryChartProps> = ({ data }) =>
     });
   }, [selectedCultura, periodo, hasPriceData]);
 
+  const activeVariation =
+    periodo === '30'
+      ? selectedCultura?.variacao30d
+      : periodo === '90'
+      ? (selectedCultura?.variacao90d ?? selectedCultura?.variacao30d)
+      : (selectedCultura?.variacao180d ?? selectedCultura?.variacao90d ?? selectedCultura?.variacao30d);
+
+  const isEmQueda = Boolean(
+    hasPriceData &&
+    activeVariation !== null &&
+    activeVariation !== undefined &&
+    activeVariation < 0
+  );
+
   return (
     <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-soft flex flex-col justify-between h-full">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
           <div className="flex items-center gap-1.5">
-            <TrendingUp className="w-4 h-4 text-brand-600" />
+            {isEmQueda ? (
+              <TrendingDown className="w-6 h-10 text-rose-600" />
+            ) : (
+              <TrendingUp className="w-6 h-10 text-brand-600" />
+            )}
             <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
               Histórico de preços
             </h3>

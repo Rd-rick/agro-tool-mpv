@@ -88,7 +88,7 @@ export const FilterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const fillCuritibanosPreset = () => {
-    setCodigoIbge('4204809');
+    setCodigoIbge('4204806');
     setNomeMunicipio('Curitibanos');
     const start = getCurrentYearMonth();
     setMesInicioState(start);
