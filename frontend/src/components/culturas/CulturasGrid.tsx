@@ -18,47 +18,26 @@ export const CulturasGrid: React.FC<CulturasGridProps> = ({
   onSelectCultura,
 }) => {
   const [search, setSearch] = useState<string>('');
-  const [selectedGroup, setSelectedGroup] = useState<string>('todos');
-
-  const groups = ['todos', ...Array.from(new Set(culturas.map((c) => c.grupoAgricola).filter(Boolean)))];
 
   const filtered = culturas.filter((c) => {
-    const matchesSearch =
+    return (
       c.nomeCultura.toLowerCase().includes(search.toLowerCase()) ||
-      (c.nomeCientifico && c.nomeCientifico.toLowerCase().includes(search.toLowerCase()));
-    const matchesGroup = selectedGroup === 'todos' || c.grupoAgricola === selectedGroup;
-    return matchesSearch && matchesGroup;
+      (c.nomeCientifico && c.nomeCientifico.toLowerCase().includes(search.toLowerCase()))
+    );
   });
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white p-4 rounded-3xl border border-slate-100 shadow-soft">
-        <div className="relative flex-1">
+      <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-soft">
+        <div className="relative">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar cultura ou espécie..."
-            className="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500/20"
           />
-        </div>
-
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
-          {groups.map((g) => (
-            <button
-              key={g}
-              type="button"
-              onClick={() => setSelectedGroup(g)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize whitespace-nowrap transition-all ${
-                selectedGroup === g
-                  ? 'bg-brand-600 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200/60'
-              }`}
-            >
-              {g}
-            </button>
-          ))}
         </div>
       </div>
 
