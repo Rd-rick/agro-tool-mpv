@@ -63,6 +63,7 @@ public record DashboardResponse(
             String tipoSolo,
             String classificacao,
             String teorArgila,
+            String aguaDisponivel,
             String descricao
     ) {
     }
@@ -102,6 +103,7 @@ public record DashboardResponse(
             boolean possuiHistoricoPam,
             Integer ultimoAnoPam,
             Integer rendimentoMedioPamKgHa,
+            ProjecaoProducaoEconomicaResponse projecaoEconomica,
             List<String> justificativas,
             List<String> avisosMetodologicos
     ) {
@@ -111,6 +113,7 @@ public record DashboardResponse(
             int segurancaClimatica,
             int amplitudeJanela,
             int dinamicaPrecos,
+            int potencialReceita,
             int qualidadeInformacao,
             int notaFinal
     ) {

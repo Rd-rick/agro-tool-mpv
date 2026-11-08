@@ -21,7 +21,7 @@ public record CompararCulturasRequest(
         @Pattern(regexp = "^\\d{4}-(0[1-9]|1[0-2])$", message = "mesFim deve estar no formato AAAA-MM")
         String mesFim,
 
-        @Pattern(regexp = "^([123]|SOLO_ARENOSO|SOLO_TEXTURA_MEDIA|SOLO_ARGILOSO)?$", message = "soloCodigo deve ser 1 (Solo arenoso), 2 (Solo de textura média) ou 3 (Solo argiloso)")
+        @Pattern(regexp = "^([123]|1[1-6]|SOLO_ARENOSO|SOLO_TEXTURA_MEDIA|SOLO_ARGILOSO|SOLO_AD[1-6]|AD[1-6])?$", message = "soloCodigo deve ser 1 a 3 (textura do solo) ou 11 a 16 (classes de água disponível AD1 a AD6)")
         String soloCodigo,
 
         @NotEmpty(message = "culturaIds é obrigatório")

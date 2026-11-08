@@ -53,6 +53,7 @@ public record CompararCulturasResponse(
             String tipoSolo,
             String classificacao,
             String teorArgila,
+            String aguaDisponivel,
             String descricao
     ) {
     }
@@ -133,6 +134,7 @@ public record CompararCulturasResponse(
             int segurancaClimatica,
             int amplitudeJanela,
             int dinamicaPrecos,
+            int potencialReceita,
             int qualidadeInformacao,
             List<String> justificativas
     ) {

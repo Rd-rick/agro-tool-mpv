@@ -19,6 +19,7 @@ import com.figueredo.ricardo.mvp.zarc.domain.model.TipoSoloZarc;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -114,9 +115,10 @@ public class ExecutorFerramentasAgroService implements AgroToolFunctionsExecutor
         }
         Integer safraIni = extrairInteger(args, "safraIni");
         Integer safraFim = extrairInteger(args, "safraFim");
+        BigDecimal areaHa = extrairBigDecimal(args, "areaHa");
 
         var resultado = calcularRankingUseCase.calcularRankingPorMunicipioESafra(
-                new FiltroRankingOportunidades(codigoIbge, safraIni, safraFim)
+                new FiltroRankingOportunidades(codigoIbge, safraIni, safraFim, areaHa)
         );
 
         return ResultadoFerramentaIa.comSucesso(nome, objectMapper.writeValueAsString(resultado));
@@ -134,12 +136,13 @@ public class ExecutorFerramentasAgroService implements AgroToolFunctionsExecutor
         String mesInicio = extrairString(args, "mesInicio");
         String mesFim = extrairString(args, "mesFim");
         String soloTexto = extrairString(args, "tipoSolo");
+        BigDecimal areaHa = extrairBigDecimal(args, "areaHa");
 
         PeriodoPlantioMeses periodo = resolverPeriodo(mesInicio, mesFim);
         TipoSoloZarc tipoSolo = resolverTipoSolo(soloTexto).orElse(null);
 
         var resultado = consultarAnaliseCulturaUseCase.consultarAnaliseCultura(
-                new FiltroAnaliseCultura(codigoIbge, culturaId, periodo, tipoSolo)
+                new FiltroAnaliseCultura(codigoIbge, culturaId, periodo, tipoSolo, areaHa)
         );
 
         return ResultadoFerramentaIa.comSucesso(nome, objectMapper.writeValueAsString(resultado));
@@ -206,6 +209,17 @@ public class ExecutorFerramentasAgroService implements AgroToolFunctionsExecutor
         return Long.parseLong(val.toString().trim());
     }
 
+    private BigDecimal extrairBigDecimal(Map<String, Object> args, String chave) {
+        Object val = args.get(chave);
+        if (val == null) {
+            return null;
+        }
+        if (val instanceof Number num) {
+            return BigDecimal.valueOf(num.doubleValue());
+        }
+        return new BigDecimal(val.toString().trim());
+    }
+
     @SuppressWarnings("unchecked")
     private List<Long> extrairListaLong(Map<String, Object> args, String chave) {
         Object val = args.get(chave);
@@ -227,7 +241,7 @@ public class ExecutorFerramentasAgroService implements AgroToolFunctionsExecutor
                                 "codigoIbge", Map.of("type", "string", "description", "Código IBGE de 7 dígitos do município em Santa Catarina (ex: '4204809')"),
                                 "mesInicio", Map.of("type", "string", "description", "Mês inicial no formato YYYY-MM (opcional)"),
                                 "mesFim", Map.of("type", "string", "description", "Mês final no formato YYYY-MM (opcional)"),
-                                "tipoSolo", Map.of("type", "string", "description", "Tipo de solo: 1 (arenoso), 2 (textura média), 3 (argiloso) (opcional)")
+                                "tipoSolo", Map.of("type", "string", "description", "Tipo de solo: 1 a 3 (textura) ou 11 a 16 (classes de água disponível AD1 a AD6 - IN MAPA 1/2022) (opcional)")
                         ),
                         "required", List.of("codigoIbge")
                 )
@@ -237,13 +251,14 @@ public class ExecutorFerramentasAgroService implements AgroToolFunctionsExecutor
     private DefinicaoFerramentaIa definirFerramentaRanking() {
         return new DefinicaoFerramentaIa(
                 FERRAMENTA_RANKING,
-                "Calcula o ranking indicativo de oportunidades do Motor de Decisão para as culturas no município, cruzando ZARC e preços.",
+                "Calcula o ranking indicativo de oportunidades do Motor de Decisão para as culturas no município, cruzando ZARC, preços e receita bruta.",
                 Map.of(
                         "type", "object",
                         "properties", Map.of(
                                 "codigoIbge", Map.of("type", "string", "description", "Código IBGE de 7 dígitos do município em Santa Catarina (ex: '4204809')"),
                                 "safraIni", Map.of("type", "integer", "description", "Ano inicial da safra, ex: 2024 (opcional)"),
-                                "safraFim", Map.of("type", "integer", "description", "Ano final da safra, ex: 2025 (opcional)")
+                                "safraFim", Map.of("type", "integer", "description", "Ano final da safra, ex: 2025 (opcional)"),
+                                "areaHa", Map.of("type", "number", "description", "Área disponível para plantio em hectares para calcular projeção de sacas e receita bruta (opcional)")
                         ),
                         "required", List.of("codigoIbge")
                 )
@@ -253,7 +268,7 @@ public class ExecutorFerramentasAgroService implements AgroToolFunctionsExecutor
     private DefinicaoFerramentaIa definirFerramentaAnalise() {
         return new DefinicaoFerramentaIa(
                 FERRAMENTA_ANALISE,
-                "Consulta a análise detalhada de uma cultura em um município (zoneamento ZARC, cotações Epagri/CONAB, histórico PAM).",
+                "Consulta a análise detalhada de uma cultura em um município (zoneamento ZARC, cotações Epagri/CONAB, histórico PAM e receita bruta).",
                 Map.of(
                         "type", "object",
                         "properties", Map.of(
@@ -261,7 +276,8 @@ public class ExecutorFerramentasAgroService implements AgroToolFunctionsExecutor
                                 "culturaId", Map.of("type", "integer", "description", "ID numérico da cultura agrícola (obtido na listagem de culturas ou ranking)"),
                                 "mesInicio", Map.of("type", "string", "description", "Mês inicial no formato YYYY-MM (opcional)"),
                                 "mesFim", Map.of("type", "string", "description", "Mês final no formato YYYY-MM (opcional)"),
-                                "tipoSolo", Map.of("type", "string", "description", "Tipo de solo: 1, 2 ou 3 (opcional)")
+                                "tipoSolo", Map.of("type", "string", "description", "Tipo de solo: 1 a 3 (textura) ou 11 a 16 (classes AD1 a AD6) (opcional)"),
+                                "areaHa", Map.of("type", "number", "description", "Área em hectares para projetar produção e receita bruta (opcional)")
                         ),
                         "required", List.of("codigoIbge", "culturaId")
                 )
@@ -279,7 +295,7 @@ public class ExecutorFerramentasAgroService implements AgroToolFunctionsExecutor
                                 "culturaIds", Map.of("type", "array", "items", Map.of("type", "integer"), "description", "Lista com 2 ou 3 IDs numéricos de culturas"),
                                 "mesInicio", Map.of("type", "string", "description", "Mês inicial no formato YYYY-MM (opcional)"),
                                 "mesFim", Map.of("type", "string", "description", "Mês final no formato YYYY-MM (opcional)"),
-                                "tipoSolo", Map.of("type", "string", "description", "Tipo de solo: 1, 2 ou 3 (opcional)")
+                                "tipoSolo", Map.of("type", "string", "description", "Tipo de solo: 1 a 3 (textura) ou 11 a 16 (classes AD1 a AD6) (opcional)")
                         ),
                         "required", List.of("codigoIbge", "culturaIds")
                 )

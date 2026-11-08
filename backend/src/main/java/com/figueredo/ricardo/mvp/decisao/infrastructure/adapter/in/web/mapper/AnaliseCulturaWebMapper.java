@@ -12,7 +12,9 @@ import com.figueredo.ricardo.mvp.decisao.domain.model.AnaliseCulturaResultado.Pr
 import com.figueredo.ricardo.mvp.decisao.domain.model.AnaliseCulturaResultado.ZoneamentoSecao;
 import com.figueredo.ricardo.mvp.decisao.domain.model.HistoricoPamCultura;
 import com.figueredo.ricardo.mvp.decisao.domain.model.PontuacaoCriterios;
+import com.figueredo.ricardo.mvp.decisao.domain.model.ProjecaoProducaoEconomica;
 import com.figueredo.ricardo.mvp.decisao.domain.model.ScoreOportunidade;
+import com.figueredo.ricardo.mvp.decisao.infrastructure.adapter.in.web.dto.ProjecaoProducaoEconomicaResponse;
 import com.figueredo.ricardo.mvp.decisao.infrastructure.adapter.in.web.dto.AnaliseCulturaResponse;
 import com.figueredo.ricardo.mvp.decisao.infrastructure.adapter.in.web.dto.AnaliseCulturaResponse.AlertaVariacaoResponse;
 import com.figueredo.ricardo.mvp.decisao.infrastructure.adapter.in.web.dto.AnaliseCulturaResponse.AnaliseDetalhadaResponse;
@@ -67,7 +69,8 @@ public class AnaliseCulturaWebMapper {
                 request.codigoIbge(),
                 request.culturaId(),
                 periodo,
-                tipoSolo
+                tipoSolo,
+                request.areaHa()
         );
     }
 
@@ -153,6 +156,7 @@ public class AnaliseCulturaWebMapper {
                 solo.tipoSolo(),
                 solo.classificacao(),
                 solo.teorArgila(),
+                solo.aguaDisponivel(),
                 solo.descricao()
         );
     }
@@ -327,12 +331,17 @@ public class AnaliseCulturaWebMapper {
 
         ProdutividadeMunicipalResponse produtividade = toProdutividadeResponse(secao.produtividadeMunicipal());
 
+        ProjecaoProducaoEconomicaResponse projecao = secao.scoreOportunidade() != null
+                ? toProjecaoResponse(secao.scoreOportunidade().projecaoEconomica())
+                : null;
+
         return new AnaliseDetalhadaResponse(
                 scoreResponse,
                 secao.comportamentoPrecosResumo(),
                 melhores,
                 alertas,
                 produtividade,
+                projecao,
                 secao.avisosMetodologicos()
         );
     }
@@ -342,16 +351,39 @@ public class AnaliseCulturaWebMapper {
             return null;
         }
         PontuacaoCriterios c = score.pontosPorCriterio();
+        ProjecaoProducaoEconomicaResponse projecao = toProjecaoResponse(score.projecaoEconomica());
+
         return new ScoreResumoAnaliseResponse(
                 score.posicaoRanking(),
                 score.notaFinal(),
                 c.segurancaClimatica(),
                 c.janelaPlantio(),
                 c.dinamicaPrecos(),
+                c.potencialReceita(),
                 c.qualidadeInformacao(),
                 toJanelaResponse(score.melhorPeriodoPlantio()),
                 score.recomendacaoMelhorPeriodo(),
+                projecao,
                 score.justificativas()
+        );
+    }
+
+    private ProjecaoProducaoEconomicaResponse toProjecaoResponse(ProjecaoProducaoEconomica p) {
+        if (p == null) {
+            return null;
+        }
+        return new ProjecaoProducaoEconomicaResponse(
+                p.areaInformadaHa(),
+                p.rendimentoHistoricoKgHa(),
+                p.pesoEmbalagemKg(),
+                p.unidadeComercializacao(),
+                p.produtividadeEstimadaPorHa(),
+                p.producaoTotalEstimada(),
+                p.precoReferencia(),
+                p.receitaBrutaPorHa(),
+                p.receitaBrutaTotal(),
+                p.status() != null ? p.status().name() : null,
+                p.avisoMetodologico()
         );
     }
 

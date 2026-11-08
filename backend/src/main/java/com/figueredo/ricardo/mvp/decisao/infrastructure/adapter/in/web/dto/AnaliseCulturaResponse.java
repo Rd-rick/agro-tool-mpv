@@ -57,6 +57,7 @@ public record AnaliseCulturaResponse(
             String tipoSolo,
             String classificacao,
             String teorArgila,
+            String aguaDisponivel,
             String descricao
     ) {
     }
@@ -194,6 +195,7 @@ public record AnaliseCulturaResponse(
             List<MelhorPeriodoComercializacaoResponse> melhoresPeriodosComercializacao,
             List<AlertaVariacaoResponse> alertasVariacoesRelevantes,
             ProdutividadeMunicipalResponse produtividadeMunicipal,
+            ProjecaoProducaoEconomicaResponse projecaoEconomica,
             List<String> avisosMetodologicos
     ) {
     }
@@ -204,9 +206,11 @@ public record AnaliseCulturaResponse(
             int segurancaClimatica,
             int amplitudeJanela,
             int dinamicaPrecos,
+            int potencialReceita,
             int qualidadeInformacao,
             JanelaPlantioDetalhadaResponse melhorPeriodoPlantio,
             String recomendacaoMelhorPeriodo,
+            ProjecaoProducaoEconomicaResponse projecaoEconomica,
             List<String> justificativas
     ) {
     }

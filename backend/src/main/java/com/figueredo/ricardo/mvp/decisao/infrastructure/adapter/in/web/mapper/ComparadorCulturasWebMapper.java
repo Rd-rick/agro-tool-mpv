@@ -128,6 +128,7 @@ public class ComparadorCulturasWebMapper {
                 solo.tipoSolo(),
                 solo.classificacao(),
                 solo.teorArgila(),
+                solo.aguaDisponivel(),
                 solo.descricao()
         );
     }
@@ -230,6 +231,7 @@ public class ComparadorCulturasWebMapper {
                 c.segurancaClimatica(),
                 c.janelaPlantio(),
                 c.dinamicaPrecos(),
+                c.potencialReceita(),
                 c.qualidadeInformacao(),
                 s.justificativas()
         );

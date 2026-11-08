@@ -6,6 +6,7 @@ import com.figueredo.ricardo.mvp.decisao.domain.model.DashboardResultado.Cultura
 import com.figueredo.ricardo.mvp.decisao.domain.model.DashboardResultado.IndicadorRiscoCultura;
 import com.figueredo.ricardo.mvp.decisao.domain.model.DashboardResultado.MunicipioDashboard;
 import com.figueredo.ricardo.mvp.decisao.domain.model.PontuacaoCriterios;
+import com.figueredo.ricardo.mvp.decisao.domain.model.ProjecaoProducaoEconomica;
 import com.figueredo.ricardo.mvp.decisao.domain.model.ScoreOportunidade;
 import com.figueredo.ricardo.mvp.decisao.infrastructure.adapter.in.web.dto.ConsultarDashboardRequest;
 import com.figueredo.ricardo.mvp.decisao.infrastructure.adapter.in.web.dto.DashboardResponse;
@@ -17,6 +18,7 @@ import com.figueredo.ricardo.mvp.decisao.infrastructure.adapter.in.web.dto.Dashb
 import com.figueredo.ricardo.mvp.decisao.infrastructure.adapter.in.web.dto.DashboardResponse.MunicipioDashboardResponse;
 import com.figueredo.ricardo.mvp.decisao.infrastructure.adapter.in.web.dto.DashboardResponse.OportunidadeDashboardResponse;
 import com.figueredo.ricardo.mvp.decisao.infrastructure.adapter.in.web.dto.DashboardResponse.SoloResumoResponse;
+import com.figueredo.ricardo.mvp.decisao.infrastructure.adapter.in.web.dto.ProjecaoProducaoEconomicaResponse;
 import com.figueredo.ricardo.mvp.zarc.domain.model.CicloZoneamento;
 import com.figueredo.ricardo.mvp.zarc.domain.model.PeriodoDecendio;
 import com.figueredo.ricardo.mvp.zarc.domain.model.PeriodoPlantioMeses;
@@ -150,6 +152,7 @@ public class DashboardWebMapper {
                 solo.tipoSolo(),
                 solo.classificacao(),
                 solo.teorArgila(),
+                solo.aguaDisponivel(),
                 solo.descricao()
         );
     }
@@ -164,6 +167,7 @@ public class DashboardWebMapper {
                 c.segurancaClimatica(),
                 c.janelaPlantio(),
                 c.dinamicaPrecos(),
+                c.potencialReceita(),
                 c.qualidadeInformacao(),
                 c.notaFinal()
         );
@@ -171,6 +175,8 @@ public class DashboardWebMapper {
         List<SoloResumoResponse> solosAptosResponse = score.solosAptos().stream()
                 .map(this::toSoloResponse)
                 .toList();
+
+        ProjecaoProducaoEconomicaResponse projecaoResponse = toProjecaoResponse(score.projecaoEconomica());
 
         return new OportunidadeDashboardResponse(
                 score.culturaId(),
@@ -201,8 +207,28 @@ public class DashboardWebMapper {
                 score.possuiHistoricoPam(),
                 score.ultimoAnoPam(),
                 score.rendimentoMedioPamKgHa(),
+                projecaoResponse,
                 score.justificativas(),
                 score.avisosMetodologicos()
+        );
+    }
+
+    private ProjecaoProducaoEconomicaResponse toProjecaoResponse(ProjecaoProducaoEconomica p) {
+        if (p == null) {
+            return null;
+        }
+        return new ProjecaoProducaoEconomicaResponse(
+                p.areaInformadaHa(),
+                p.rendimentoHistoricoKgHa(),
+                p.pesoEmbalagemKg(),
+                p.unidadeComercializacao(),
+                p.produtividadeEstimadaPorHa(),
+                p.producaoTotalEstimada(),
+                p.precoReferencia(),
+                p.receitaBrutaPorHa(),
+                p.receitaBrutaTotal(),
+                p.status() != null ? p.status().name() : null,
+                p.avisoMetodologico()
         );
     }
 
