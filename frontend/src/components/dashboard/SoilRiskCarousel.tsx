@@ -28,7 +28,7 @@ export const SoilRiskCarousel: React.FC<SoilRiskCarouselProps> = ({ data }) => {
     },
     {
       title: 'Solos aptos na região',
-      value: `${solosAptos}/3`,
+      value: `${solosAptos}/9`,
       subtitle: 'Tipos aceitos pelo zoneamento',
     },
   ];

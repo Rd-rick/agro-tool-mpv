@@ -38,12 +38,16 @@ export async function getAnaliseCultura(
     mesInicio: string;
     mesFim: string;
     soloCodigo?: string;
+    areaHa?: number | string;
   }
 ): Promise<AnaliseCulturaResponse> {
   const query = new URLSearchParams();
   query.set('mesInicio', params.mesInicio);
   query.set('mesFim', params.mesFim);
   if (params.soloCodigo) query.set('soloCodigo', params.soloCodigo);
+  if (params.areaHa && String(params.areaHa).trim() !== '') {
+    query.set('areaHa', String(params.areaHa));
+  }
   return apiFetch<AnaliseCulturaResponse>(
     `/api/v1/municipios/${codigoIbge}/culturas/${culturaId}/analise?${query.toString()}`
   );

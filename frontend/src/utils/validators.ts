@@ -48,7 +48,9 @@ export function validarFiltrosDashboard(values: FilterValues): ValidationErrors 
     }
   }
 
-  if (values.areaHa && values.areaHa.trim() !== '') {
+  if (!values.areaHa || values.areaHa.trim() === '') {
+    errors.areaHa = 'Área para plantio é obrigatória (ex: 10 ha)';
+  } else {
     const areaNum = parseFloat(values.areaHa.trim());
     if (isNaN(areaNum) || areaNum <= 0) {
       errors.areaHa = 'Área deve ser um valor numérico positivo';

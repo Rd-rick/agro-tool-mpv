@@ -55,9 +55,9 @@ export const DashboardEmptyState: React.FC<DashboardEmptyStateProps> = () => {
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-slate-900">Zoneamento Climático ZARC</h4>
+            <h4 className="text-sm font-bold text-slate-900">Segurança Climática ZARC</h4>
             <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Consulte quais culturas são aptas para o município com níveis de risco de 20%, 30% ou 40% em 36 decêndios anuais.
+              Zoneamento de risco de 20%, 30% ou 40%, amplitude de decêndios, solos e ciclos agronômicos (peso de até 55 pts no score).
             </p>
           </div>
           <span className="text-[11px] font-semibold text-slate-400 mt-4 block">
@@ -70,13 +70,13 @@ export const DashboardEmptyState: React.FC<DashboardEmptyStateProps> = () => {
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-slate-900">Ranking & Preços Epagri / CONAB</h4>
+            <h4 className="text-sm font-bold text-slate-900">Motor de Decisão (100 pts)</h4>
             <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              O motor de decisão cruza segurança climática com cotações recentes para ranquear as melhores oportunidades.
+              Métrica multicritério: Clima (40) + Janela (15) + Tendência Epagri (20) + Receita Bruta PAM (10) + Qualidade (15).
             </p>
           </div>
           <span className="text-[11px] font-semibold text-slate-400 mt-4 block">
-            Aguardando definição da janela
+            Aguardando definição dos filtros
           </span>
         </div>
 
@@ -85,13 +85,13 @@ export const DashboardEmptyState: React.FC<DashboardEmptyStateProps> = () => {
             <Bot className="w-5 h-5" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-slate-900">Assistente IA Especializado</h4>
+            <h4 className="text-sm font-bold text-slate-900">Projeção da Safra & IA</h4>
             <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Tire dúvidas em linguagem natural com ferramentas conectadas diretamente às bases oficiais da plataforma.
+              Estimativa de sacas colhidas e receita bruta total para a sua área, além de consultoria com IA contextualizada.
             </p>
           </div>
           <span className="text-[11px] font-semibold text-slate-400 mt-4 block">
-            Aguardando contexto regional
+            Área obrigatória para projeção
           </span>
         </div>
       </div>

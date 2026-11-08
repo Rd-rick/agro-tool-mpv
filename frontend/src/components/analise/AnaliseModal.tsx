@@ -22,6 +22,7 @@ interface AnaliseModalProps {
   mesInicio: string;
   mesFim: string;
   soloCodigo?: string;
+  areaHa?: string;
   onClose: () => void;
 }
 
@@ -31,6 +32,7 @@ export const AnaliseModal: React.FC<AnaliseModalProps> = ({
   mesInicio,
   mesFim,
   soloCodigo,
+  areaHa,
   onClose,
 }) => {
   const [data, setData] = useState<AnaliseCulturaResponse | null>(null);
@@ -44,7 +46,7 @@ export const AnaliseModal: React.FC<AnaliseModalProps> = ({
     setLoading(true);
     setError(null);
 
-    getAnaliseCultura(codigoIbge, culturaId, { mesInicio, mesFim, soloCodigo })
+    getAnaliseCultura(codigoIbge, culturaId, { mesInicio, mesFim, soloCodigo, areaHa })
       .then((res) => {
         if (mounted) setData(res);
       })
@@ -58,7 +60,7 @@ export const AnaliseModal: React.FC<AnaliseModalProps> = ({
     return () => {
       mounted = false;
     };
-  }, [culturaId, codigoIbge, mesInicio, mesFim, soloCodigo]);
+  }, [culturaId, codigoIbge, mesInicio, mesFim, soloCodigo, areaHa]);
 
   if (!culturaId) return null;
 
@@ -243,46 +245,148 @@ export const AnaliseModal: React.FC<AnaliseModalProps> = ({
 
               {activeTab === 'decisao' && (
                 <div className="space-y-6">
-                  <div className="bg-emerald-50/60 rounded-2xl p-5 border border-emerald-100 flex items-center justify-between">
+                  <div className="bg-emerald-50/60 rounded-3xl p-6 border border-emerald-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
                     <div>
-                      <span className="text-xs font-bold text-emerald-800 block">
-                        Pontuação no motor de decisão
-                      </span>
-                      <div className="text-3xl font-bold text-emerald-950 mt-1 tabular-nums">
-                        {data.analise.scoreOportunidade.notaFinal} <span className="text-sm font-semibold text-emerald-700">/ 100</span>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 uppercase tracking-wider">
+                        <Award className="w-4 h-4 text-emerald-700" />
+                        <span>Motor de decisão Agro Tool</span>
                       </div>
-                      <span className="text-xs text-emerald-800 font-medium block mt-0.5">
-                        {data.analise.scoreOportunidade.posicaoRanking}ª posição no ranking municipal
+                      <div className="text-4xl font-black text-emerald-950 mt-1 tabular-nums">
+                        {data.analise.scoreOportunidade.notaFinal} <span className="text-base font-semibold text-emerald-700">/ 100</span>
+                      </div>
+                      <span className="text-xs text-emerald-800 font-semibold block mt-1">
+                        {data.analise.scoreOportunidade.posicaoRanking}ª posição no ranking regional
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 text-right text-xs">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 w-full md:w-auto text-left text-xs bg-white/80 p-4 rounded-2xl border border-emerald-200/50">
                       <div>
-                        <span className="text-xs text-slate-500 block">Segurança climática</span>
-                        <span className="font-bold text-slate-800 tabular-nums">
-                          {data.analise.scoreOportunidade.segurancaClimatica} pts
+                        <span className="text-[11px] text-slate-500 block">Clima ZARC</span>
+                        <span className="font-bold text-slate-900 tabular-nums text-sm">
+                          {data.analise.scoreOportunidade.segurancaClimatica} <span className="text-[10px] text-slate-400 font-normal">/ 40</span>
                         </span>
                       </div>
                       <div>
-                        <span className="text-xs text-slate-500 block">Amplitude janela</span>
-                        <span className="font-bold text-slate-800 tabular-nums">
-                          {data.analise.scoreOportunidade.amplitudeJanela} pts
+                        <span className="text-[11px] text-slate-500 block">Janela</span>
+                        <span className="font-bold text-slate-900 tabular-nums text-sm">
+                          {data.analise.scoreOportunidade.amplitudeJanela} <span className="text-[10px] text-slate-400 font-normal">/ 15</span>
                         </span>
                       </div>
                       <div>
-                        <span className="text-xs text-slate-500 block">Dinâmica preços</span>
-                        <span className="font-bold text-slate-800 tabular-nums">
-                          {data.analise.scoreOportunidade.dinamicaPrecos} pts
+                        <span className="text-[11px] text-slate-500 block">Preços Epagri</span>
+                        <span className="font-bold text-slate-900 tabular-nums text-sm">
+                          {data.analise.scoreOportunidade.dinamicaPrecos} <span className="text-[10px] text-slate-400 font-normal">/ 20</span>
                         </span>
                       </div>
                       <div>
-                        <span className="text-xs text-slate-500 block">Qualidade info</span>
-                        <span className="font-bold text-slate-800 tabular-nums">
-                          {data.analise.scoreOportunidade.qualidadeInformacao} pts
+                        <span className="text-[11px] text-slate-500 block">Receita Bruta</span>
+                        <span className="font-bold text-emerald-700 tabular-nums text-sm">
+                          {data.analise.scoreOportunidade.potencialReceita ?? 0} <span className="text-[10px] text-slate-400 font-normal">/ 10</span>
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 block">Qualidade Info</span>
+                        <span className="font-bold text-slate-900 tabular-nums text-sm">
+                          {data.analise.scoreOportunidade.qualidadeInformacao} <span className="text-[10px] text-slate-400 font-normal">/ 15</span>
                         </span>
                       </div>
                     </div>
                   </div>
+
+                  {(() => {
+                    const projecao = data.analise.projecaoEconomica || data.analise.scoreOportunidade.projecaoEconomica;
+                    if (!projecao) return null;
+
+                    const isCalculado = projecao.status === 'CALCULADO_COM_SUCESSO';
+
+                    return (
+                      <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-soft space-y-4">
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                          <div className="flex items-center gap-2">
+                            <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
+                              <DollarSign className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-bold text-slate-900">Projeção da Produção e Receita Bruta</h4>
+                              <p className="text-xs text-slate-500">Estimativa com base no IBGE/PAM e cotação recebida pelo produtor (Epagri/Cepa)</p>
+                            </div>
+                          </div>
+                          <span className={`text-xs px-3 py-1 rounded-full font-bold ${
+                            isCalculado ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-slate-100 text-slate-600'
+                          }`}>
+                            {isCalculado ? 'Projeção Ativa' : 'Sob Consulta'}
+                          </span>
+                        </div>
+
+                        {isCalculado ? (
+                          <>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-xs sm:text-sm">
+                              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                                <span className="text-xs text-slate-500 block mb-0.5">Área informada</span>
+                                <span className="font-bold text-slate-900 tabular-nums text-base">
+                                  {projecao.areaInformadaHa} <span className="text-xs font-normal text-slate-500">ha</span>
+                                </span>
+                              </div>
+
+                              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                                <span className="text-xs text-slate-500 block mb-0.5">Produtividade estimada</span>
+                                <span className="font-bold text-slate-900 tabular-nums text-base">
+                                  {formatNumber(projecao.produtividadeEstimadaPorHa)} <span className="text-xs font-normal text-slate-500">{projecao.unidadeComercializacao}/ha</span>
+                                </span>
+                              </div>
+
+                              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                                <span className="text-xs text-slate-500 block mb-0.5">Produção total projetada</span>
+                                <span className="font-bold text-brand-700 tabular-nums text-base">
+                                  {formatNumber(projecao.producaoTotalEstimada)} <span className="text-xs font-normal text-brand-600">{projecao.unidadeComercializacao}</span>
+                                </span>
+                              </div>
+
+                              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                                <span className="text-xs text-slate-500 block mb-0.5">Preço recebido (ref.)</span>
+                                <span className="font-bold text-slate-900 tabular-nums text-base">
+                                  {formatCurrency(projecao.precoReferencia)} <span className="text-xs font-normal text-slate-500">/{projecao.unidadeComercializacao}</span>
+                                </span>
+                              </div>
+
+                              <div className="bg-emerald-50/70 p-3.5 rounded-2xl border border-emerald-100 sm:col-span-1 lg:col-span-2">
+                                <span className="text-xs text-emerald-800 font-semibold block mb-0.5">Receita bruta estimada por hectare</span>
+                                <span className="font-black text-emerald-900 tabular-nums text-lg">
+                                  {formatCurrency(projecao.receitaBrutaPorHa)} <span className="text-xs font-medium text-emerald-700">/ ha</span>
+                                </span>
+                              </div>
+
+                              <div className="bg-emerald-50/70 p-3.5 rounded-2xl border border-emerald-100 sm:col-span-2 lg:col-span-2">
+                                <span className="text-xs text-emerald-800 font-semibold block mb-0.5">Receita bruta total ({projecao.areaInformadaHa} ha)</span>
+                                <span className="font-black text-emerald-900 tabular-nums text-xl">
+                                  {formatCurrency(projecao.receitaBrutaTotal)}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="p-4 bg-amber-50/90 border border-amber-200/90 rounded-2xl flex items-start gap-3">
+                              <AlertCircle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+                              <div className="text-xs text-amber-900 leading-relaxed space-y-1">
+                                <span className="font-bold block">Aviso metodológico obrigatório:</span>
+                                <p>
+                                  {projecao.avisoMetodologico ||
+                                    'A receita bruta representa a projeção do faturamento estimado da colheita e não desconta os custos de insumos (sementes, defensivos, adubação) nem operações agrícolas. Não representa lucro líquido.'}
+                                </p>
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-600 flex items-center gap-3">
+                            <AlertCircle className="w-5 h-5 text-slate-400 shrink-0" />
+                            <p>
+                              {projecao.avisoMetodologico ||
+                                'Projeção de receita bruta indisponível para esta cultura devido à ausência de dados de rendimento no município ou cotação ativa da Epagri/Cepa.'}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {data.analise.produtividadeMunicipal && data.analise.produtividadeMunicipal.possuiDadosPam && (
                     <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">

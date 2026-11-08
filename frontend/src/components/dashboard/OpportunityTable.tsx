@@ -22,7 +22,10 @@ export const OpportunityTable: React.FC<OpportunityTableProps> = ({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Award className="w-5 h-5 text-brand-600" />
-          <h3 className="text-base font-bold text-slate-900 tracking-tight">Ranking de oportunidades</h3>
+          <div>
+            <h3 className="text-base font-bold text-slate-900 tracking-tight">Ranking de oportunidades</h3>
+            <p className="text-[11px] text-slate-500 font-medium">ZARC (40) · Janela (15) · Preços (20) · Receita (10) · Dados (15)</p>
+          </div>
         </div>
         <button
           type="button"
@@ -39,9 +42,9 @@ export const OpportunityTable: React.FC<OpportunityTableProps> = ({
             <tr className="border-b border-slate-100 text-xs font-semibold text-slate-500">
               <th className="py-2.5 pl-2 font-medium">#</th>
               <th className="py-2.5 font-medium">Cultura</th>
-              <th className="py-2.5 text-right font-medium">Preço ref.</th>
+              <th className="py-2.5 text-right font-medium">Preço / Rec. Bruta</th>
               <th className="py-2.5 text-right font-medium">30 dias</th>
-              <th className="py-2.5 pr-2 text-right font-medium">Nota</th>
+              <th className="py-2.5 pr-2 text-right font-medium" title="Pontuação no motor de decisão (0 a 100 pts)">Nota</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100/70 text-xs sm:text-sm">
@@ -66,8 +69,19 @@ export const OpportunityTable: React.FC<OpportunityTableProps> = ({
                       </span>
                     </div>
                   </td>
-                  <td className="py-3 text-right font-medium text-slate-800 tabular-nums text-xs sm:text-sm">
-                    {formatCurrency(op.precoAtualReferencia)}
+                  <td className="py-3 text-right tabular-nums text-xs sm:text-sm">
+                    <span className="font-semibold text-slate-800 block">
+                      {formatCurrency(op.precoAtualReferencia)}
+                    </span>
+                    {op.projecaoEconomica?.status === 'CALCULADO_COM_SUCESSO' && op.projecaoEconomica.receitaBrutaPorHa ? (
+                      <span className="text-[11px] font-medium text-emerald-700 block" title="Receita bruta estimada por hectare">
+                        {formatCurrency(op.projecaoEconomica.receitaBrutaPorHa)}/ha
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-slate-400 block">
+                        {op.unidadeMedida || 'saca'}
+                      </span>
+                    )}
                   </td>
                   <td className="py-3 text-right tabular-nums text-xs">
                     <span
@@ -85,7 +99,7 @@ export const OpportunityTable: React.FC<OpportunityTableProps> = ({
                     </span>
                   </td>
                   <td className="py-3 pr-2 text-right tabular-nums">
-                    <span className="inline-block px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 font-bold text-xs border border-brand-200/60">
+                    <span className="inline-block px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 font-bold text-xs border border-brand-200/60" title={`Critérios: Clima ${op.criteriosPontuacao?.segurancaClimatica ?? 0}/40 | Janela ${op.criteriosPontuacao?.amplitudeJanela ?? 0}/15 | Preço ${op.criteriosPontuacao?.dinamicaPrecos ?? 0}/20 | Receita ${op.criteriosPontuacao?.potencialReceita ?? 0}/10 | Qualidade ${op.criteriosPontuacao?.qualidadeInformacao ?? 0}/15`}>
                       {op.notaFinal}
                     </span>
                   </td>

@@ -348,13 +348,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({ loading = false, onConsult
 
         <div className="md:col-span-2">
           <label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">
-            Área de plantio <span className="text-slate-500 font-normal">(ha)</span>
+            Área de plantio <span className="text-brand-600">*</span> <span className="text-slate-500 font-normal">(ha)</span>
           </label>
           <input
             type="number"
             min="1"
             max="1000000"
-            placeholder="Ex: 50"
+            placeholder="Ex: 10"
             value={areaHa}
             onChange={(e) => {
               setAreaHa(e.target.value);

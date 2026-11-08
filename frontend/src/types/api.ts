@@ -32,10 +32,31 @@ export interface JanelaPlantioResumo {
   riscosDisponiveis: number[];
 }
 
+export type StatusProjecaoProducao =
+  | 'CALCULADO_COM_SUCESSO'
+  | 'INDISPONIVEL_SEM_HISTORICO_MUNICIPAL'
+  | 'INDISPONIVEL_SEM_COTACAO'
+  | 'INDISPONIVEL_UNIDADE_VARIAVEL';
+
+export interface ProjecaoProducaoEconomica {
+  areaInformadaHa: number | null;
+  rendimentoHistoricoKgHa: number | null;
+  pesoEmbalagemKg: number | null;
+  unidadeComercializacao: string | null;
+  produtividadeEstimadaPorHa: number | null;
+  producaoTotalEstimada: number | null;
+  precoReferencia: number | null;
+  receitaBrutaPorHa: number | null;
+  receitaBrutaTotal: number | null;
+  status: StatusProjecaoProducao;
+  avisoMetodologico: string | null;
+}
+
 export interface CriteriosPontuacao {
   segurancaClimatica: number;
   amplitudeJanela: number;
   dinamicaPrecos: number;
+  potencialReceita: number;
   qualidadeInformacao: number;
   notaFinal: number;
 }
@@ -69,6 +90,7 @@ export interface OportunidadeDashboard {
   possuiHistoricoPam: boolean;
   ultimoAnoPam: number | null;
   rendimentoMedioPamKgHa: number | null;
+  projecaoEconomica: ProjecaoProducaoEconomica | null;
   justificativas: string[];
   avisosMetodologicos: string[];
 }
@@ -218,8 +240,10 @@ export interface ScoreResumoAnalise {
   segurancaClimatica: number;
   amplitudeJanela: number;
   dinamicaPrecos: number;
+  potencialReceita: number;
   qualidadeInformacao: number;
   recomendacaoMelhorPeriodo: string | null;
+  projecaoEconomica?: ProjecaoProducaoEconomica | null;
   justificativas: string[];
 }
 
@@ -265,6 +289,7 @@ export interface AnaliseCulturaResponse {
     comportamentoPrecosUltimosMeses: string;
     alertasVariacoesRelevantes: AlertaVariacao[];
     produtividadeMunicipal: ProdutividadeMunicipal;
+    projecaoEconomica?: ProjecaoProducaoEconomica | null;
     avisosMetodologicos: string[];
   };
 }
@@ -314,6 +339,7 @@ export interface CulturaComparada {
     segurancaClimatica: number;
     amplitudeJanela: number;
     dinamicaPrecos: number;
+    potencialReceita: number;
     qualidadeInformacao: number;
     justificativas: string[];
   };

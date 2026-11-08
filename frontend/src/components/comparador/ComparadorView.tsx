@@ -139,7 +139,7 @@ export const ComparadorView: React.FC<ComparadorViewProps> = ({
                   <span className="text-xs font-bold text-emerald-800 block">
                     Motor de decisão
                   </span>
-                  <div className="text-3xl font-bold text-emerald-950 mt-1 tabular-nums">
+                  <div className="text-3xl font-bold text-emerald-950 mt-0.5 tabular-nums">
                     {c.scoreMotorDecisao.notaFinal} <span className="text-sm font-semibold text-emerald-700">/ 100</span>
                   </div>
                   <span className="text-xs text-emerald-800 font-semibold block mt-0.5">
@@ -147,6 +147,29 @@ export const ComparadorView: React.FC<ComparadorViewProps> = ({
                       ? `${c.scoreMotorDecisao.posicaoRankingMunicipio}º lugar no ranking regional`
                       : 'Indicativo ZARC'}
                   </span>
+
+                  <div className="mt-3 pt-3 border-t border-emerald-200/60 grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
+                    <div>
+                      <span className="text-slate-500 block">Clima ZARC:</span>
+                      <span className="font-bold text-slate-800 tabular-nums">{c.scoreMotorDecisao.segurancaClimatica}/40</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Janela:</span>
+                      <span className="font-bold text-slate-800 tabular-nums">{c.scoreMotorDecisao.amplitudeJanela}/15</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Preços:</span>
+                      <span className="font-bold text-slate-800 tabular-nums">{c.scoreMotorDecisao.dinamicaPrecos}/20</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Receita Bruta:</span>
+                      <span className="font-bold text-emerald-700 tabular-nums">{c.scoreMotorDecisao.potencialReceita ?? 0}/10</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Qualidade:</span>
+                      <span className="font-bold text-slate-800 tabular-nums">{c.scoreMotorDecisao.qualidadeInformacao}/15</span>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-4 text-xs sm:text-sm">
