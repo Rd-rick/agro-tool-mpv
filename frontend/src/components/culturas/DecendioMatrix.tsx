@@ -43,7 +43,7 @@ export const DecendioMatrix: React.FC<DecendioMatrixProps> = ({ matriz }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-6 sm:grid-cols-12 gap-2 text-center">
+      <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 text-center">
         {meses.map((m) => {
           const decendiosDoMes = matriz.filter((d) => d.mes === m.mes);
           return (

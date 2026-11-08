@@ -224,7 +224,7 @@ export const ComparadorView: React.FC<ComparadorViewProps> = ({
                           </span>
                         </div>
                       ) : (
-                        <span className="text-slate-500 text-xs">Sem histórico municipal cadastrado</span>
+                        <span className="text-slate-600">Sem histórico municipal cadastrado</span>
                       )}
                     </div>
                   </div>
