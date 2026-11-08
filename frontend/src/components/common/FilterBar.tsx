@@ -17,6 +17,7 @@ import { getMunicipios } from '../../api/endpoints';
 import { validarFiltrosDashboard, type ValidationErrors, type FilterValues } from '../../utils/validators';
 import type { MunicipioItem } from '../../types/api';
 import { SOLOS_CONFIG, addMonthsToYearMonth } from '../../utils/constants';
+import { MonthPickerInput } from './MonthPickerInput';
 
 interface FilterBarProps {
   loading?: boolean;
@@ -45,11 +46,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({ loading = false, onConsult
   const [loadingMunicipios, setLoadingMunicipios] = useState<boolean>(false);
   const [muniDropdownOpen, setMuniDropdownOpen] = useState<boolean>(false);
   const [periodoDropdownOpen, setPeriodoDropdownOpen] = useState<boolean>(false);
+  const [soloDropdownOpen, setSoloDropdownOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [errors, setErrors] = useState<ValidationErrors>({});
 
   const muniRef = useRef<HTMLDivElement>(null);
   const periodoRef = useRef<HTMLDivElement>(null);
+  const soloRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -63,7 +66,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ loading = false, onConsult
       } catch {
         if (mounted) {
           setMunicipios([
-            { nome: 'Curitibanos', uf: 'SC', codigoIbge: '4204809', pracaReferenciaId: null, observacaoPraca: null },
+            { nome: 'Curitibanos', uf: 'SC', codigoIbge: '4204806', pracaReferenciaId: null, observacaoPraca: null },
             { nome: 'Chapecó', uf: 'SC', codigoIbge: '4204205', pracaReferenciaId: null, observacaoPraca: null },
             { nome: 'Campos Novos', uf: 'SC', codigoIbge: '4203603', pracaReferenciaId: null, observacaoPraca: null },
             { nome: 'Joaçaba', uf: 'SC', codigoIbge: '4209006', pracaReferenciaId: null, observacaoPraca: null },
@@ -88,6 +91,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({ loading = false, onConsult
       if (periodoRef.current && !periodoRef.current.contains(event.target as Node)) {
         setPeriodoDropdownOpen(false);
       }
+      if (soloRef.current && !soloRef.current.contains(event.target as Node)) {
+        setSoloDropdownOpen(false);
+      }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -111,6 +117,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({ loading = false, onConsult
     { label: 'Ciclo 9 meses', inicio: minMesInicio, fim: addMonthsToYearMonth(minMesInicio, 8) },
     { label: 'Ano agrícola (12 meses)', inicio: minMesInicio, fim: addMonthsToYearMonth(minMesInicio, 11) },
   ];
+
+  const selectedSoloLabel =
+    SOLOS_CONFIG.find((s) => s.codigo === soloCodigo)?.label || 'Todos os tipos de solo';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -248,46 +257,39 @@ export const FilterBar: React.FC<FilterBarProps> = ({ loading = false, onConsult
                   Definir mês inicial e final
                 </span>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">
-                      Mês inicial <span className="text-brand-600">*</span>
-                    </label>
-                    <input
-                      type="month"
-                      min={minMesInicio}
+                    <MonthPickerInput
+                      label="Mês inicial"
+                      required
+                      placeholder="Selecione o mês inicial"
                       value={mesInicio}
-                      onChange={(e) => {
-                        setMesInicio(e.target.value);
+                      min={minMesInicio}
+                      onChange={(val) => {
+                        setMesInicio(val);
                         setErrors((prev) => ({ ...prev, mesInicio: undefined }));
                       }}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/20 tabular-nums"
+                      error={errors.mesInicio}
+                      helperText={`Mínimo: ${formatAnoMesDisplay(minMesInicio)}`}
                     />
-                    <span className="text-xs text-slate-500 block mt-0.5">
-                      Mínimo: {minMesInicio}
-                    </span>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">
-                      Mês final <span className="text-brand-600">*</span>
-                    </label>
-                    <input
-                      type="month"
+                    <MonthPickerInput
+                      label="Mês final"
+                      required
+                      placeholder="Selecione o mês final"
+                      value={mesFim}
                       min={mesInicio || minMesInicio}
                       max={maxMesFim}
-                      value={mesFim}
-                      onChange={(e) => {
-                        setMesFim(e.target.value);
+                      align="right"
+                      onChange={(val) => {
+                        setMesFim(val);
                         setErrors((prev) => ({ ...prev, mesFim: undefined }));
                       }}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/20 tabular-nums"
+                      error={errors.mesFim}
+                      helperText={maxMesFim ? `Máximo: ${formatAnoMesDisplay(maxMesFim)}` : undefined}
                     />
-                    {maxMesFim && (
-                      <span className="text-xs text-slate-500 block mt-0.5">
-                        Máximo: {maxMesFim}
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
@@ -328,22 +330,44 @@ export const FilterBar: React.FC<FilterBarProps> = ({ loading = false, onConsult
           )}
         </div>
 
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 relative" ref={soloRef}>
           <label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
             <Layers className="w-4 h-4 text-brand-600" />
             <span>Tipo de solo</span>
           </label>
-          <select
-            value={soloCodigo}
-            onChange={(e) => setSoloCodigo(e.target.value)}
-            className="w-full px-3 py-3 bg-slate-50 border border-slate-200/90 rounded-2xl text-sm sm:text-base font-medium text-slate-800 hover:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all cursor-pointer"
+          <button
+            type="button"
+            onClick={() => setSoloDropdownOpen(!soloDropdownOpen)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 border rounded-2xl text-left text-sm sm:text-base font-medium transition-all border-slate-200/90 text-slate-800 hover:border-brand-500"
           >
-            {SOLOS_CONFIG.map((s) => (
-              <option key={s.codigo} value={s.codigo}>
-                {s.label}
-              </option>
-            ))}
-          </select>
+            <span className="truncate">
+              {selectedSoloLabel}
+            </span>
+            <ChevronDown className="w-4 h-4 text-slate-500 shrink-0 ml-2" />
+          </button>
+
+          {soloDropdownOpen && (
+            <div className="absolute top-full mt-2 left-0 w-full min-w-[280px] bg-white rounded-2xl shadow-xl border border-slate-100 p-2.5 z-50">
+              <div className="max-h-60 overflow-y-auto space-y-1">
+                {SOLOS_CONFIG.map((s) => (
+                  <button
+                    key={s.codigo}
+                    type="button"
+                    onClick={() => {
+                      setSoloCodigo(s.codigo);
+                      setSoloDropdownOpen(false);
+                    }}
+                    className="w-full flex items-center justify-between px-3 py-2.5 text-sm rounded-xl hover:bg-brand-50/70 hover:text-brand-900 text-left transition-colors font-medium text-slate-800"
+                  >
+                    <span className="truncate">{s.label}</span>
+                    {s.codigo === soloCodigo && (
+                      <Check className="w-4 h-4 text-brand-600 shrink-0 ml-2" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="md:col-span-2">
