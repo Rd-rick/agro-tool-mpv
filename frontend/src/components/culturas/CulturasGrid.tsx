@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Sprout, ArrowUpRight, Check, Plus } from 'lucide-react';
 import { BadgeRisk } from '../common/BadgeRisk';
+import { formatarSolosAptosResumo } from '../../utils/formatters';
 import type { CulturaPossivelDashboard } from '../../types/api';
 
 interface CulturasGridProps {
@@ -64,6 +65,7 @@ export const CulturasGrid: React.FC<CulturasGridProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filtered.map((c) => {
           const isSelected = selectedToCompare.includes(c.culturaId);
+          const resumoSolos = formatarSolosAptosResumo(c.solos);
           return (
             <div
               key={c.culturaId}
@@ -101,12 +103,13 @@ export const CulturasGrid: React.FC<CulturasGridProps> = ({
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-600 font-medium">Solos aptos:</span>
-                    <span className="font-semibold text-slate-900 text-right">
-                      {c.solos && c.solos.length > 0
-                        ? c.solos.map((s) => s.codigo).join(', ')
-                        : '1, 2, 3'}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-slate-600 font-medium shrink-0">Solos aptos:</span>
+                    <span
+                      className="font-semibold text-slate-900 text-right truncate max-w-[200px]"
+                      title={resumoSolos.tooltip}
+                    >
+                      {resumoSolos.texto}
                     </span>
                   </div>
                 </div>

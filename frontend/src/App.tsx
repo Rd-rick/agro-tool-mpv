@@ -140,9 +140,9 @@ const MainApp: React.FC = () => {
             niveisRiscoDisponiveis: [20, 30, 40],
             janelasPlantio: [],
             solos: [
-              { codigo: '1', tipoSolo: 'Arenoso', classificacao: 'Tipo 1', teorArgila: '< 15%', descricao: 'Solo arenoso' },
-              { codigo: '2', tipoSolo: 'Médio', classificacao: 'Tipo 2', teorArgila: '15-35%', descricao: 'Solo textura média' },
-              { codigo: '3', tipoSolo: 'Argiloso', classificacao: 'Tipo 3', teorArgila: '> 35%', descricao: 'Solo argiloso' },
+              { codigo: '1', tipoSolo: 'Arenoso', classificacao: 'Arenoso', teorArgila: '< 15%', descricao: 'Solo arenoso' },
+              { codigo: '2', tipoSolo: 'Médio', classificacao: 'Médio', teorArgila: '15-35%', descricao: 'Solo textura média' },
+              { codigo: '3', tipoSolo: 'Argiloso', classificacao: 'Argiloso', teorArgila: '> 35%', descricao: 'Solo argiloso' },
             ],
             ciclos: [],
           },
@@ -160,8 +160,8 @@ const MainApp: React.FC = () => {
             niveisRiscoDisponiveis: [20, 30],
             janelasPlantio: [],
             solos: [
-              { codigo: '2', tipoSolo: 'Médio', classificacao: 'Tipo 2', teorArgila: '15-35%', descricao: 'Solo textura média' },
-              { codigo: '3', tipoSolo: 'Argiloso', classificacao: 'Tipo 3', teorArgila: '> 35%', descricao: 'Solo argiloso' },
+              { codigo: '2', tipoSolo: 'Médio', classificacao: 'Médio', teorArgila: '15-35%', descricao: 'Solo textura média' },
+              { codigo: '3', tipoSolo: 'Argiloso', classificacao: 'Argiloso', teorArgila: '> 35%', descricao: 'Solo argiloso' },
             ],
             ciclos: [],
           },

@@ -12,9 +12,10 @@ import {
   Loader2,
 } from 'lucide-react';
 import { getAnaliseCultura } from '../../api/endpoints';
-import { formatCurrency, formatPercent, formatNumber } from '../../utils/formatters';
+import { formatCurrency, formatPercent, formatNumber, formatarSolosListaTexto } from '../../utils/formatters';
 import { DecendioMatrix } from '../culturas/DecendioMatrix';
 import type { AnaliseCulturaResponse } from '../../types/api';
+import { cn } from '../../utils/cn';
 
 interface AnaliseModalProps {
   culturaId: number | null;
@@ -169,7 +170,7 @@ export const AnaliseModal: React.FC<AnaliseModalProps> = ({
                     <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
                       <span className="text-xs font-semibold text-slate-500 block mb-1">Solos compatíveis</span>
                       <span className="text-sm font-bold text-slate-900 block">
-                        {data.zoneamento.tiposSolo?.map((s) => s.tipoSolo).join(', ') || 'Todos'}
+                        {formatarSolosListaTexto(data.zoneamento.tiposSolo)}
                       </span>
                     </div>
                   </div>
@@ -207,14 +208,22 @@ export const AnaliseModal: React.FC<AnaliseModalProps> = ({
 
                     <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
                       <span className="text-xs font-semibold text-slate-500 block mb-1">Variação 30 dias</span>
-                      <span className="text-base font-bold text-brand-700 block tabular-nums">
+                      <span className={cn(
+                          'text-base font-bold text-brand-700 block tabular-nums',
+                          (data.mercado.variacao30d ?? 0) >= 0 ? 'text-emerald-700' : 'text-rose-600'
+                        )}
+                      >
                         {formatPercent(data.mercado.variacao30d)}
                       </span>
                     </div>
 
                     <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
                       <span className="text-xs font-semibold text-slate-500 block mb-1">Variação 90 dias</span>
-                      <span className="text-base font-bold text-slate-800 block tabular-nums">
+                      <span className={cn(
+                          'text-base font-bold text-slate-800 block tabular-nums',
+                          (data.mercado.variacao90d ?? 0) >= 0 ? 'text-emerald-700' : 'text-rose-600'
+                        )}
+                      >
                         {formatPercent(data.mercado.variacao90d)}
                       </span>
                     </div>

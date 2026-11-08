@@ -15,6 +15,7 @@ export interface SoloResumo {
   tipoSolo: string;
   classificacao: string;
   teorArgila: string;
+  aguaDisponivel?: string;
   descricao: string;
 }
 

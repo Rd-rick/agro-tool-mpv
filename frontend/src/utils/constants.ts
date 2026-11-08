@@ -24,7 +24,13 @@ export const DEFAULT_AREA_HA = '';
 
 export const SOLOS_CONFIG = [
   { codigo: '', label: 'Todos os tipos de solo' },
-  { codigo: '1', label: 'Tipo 1 — Solo Arenoso' },
-  { codigo: '2', label: 'Tipo 2 — Textura Média' },
-  { codigo: '3', label: 'Tipo 3 — Solo Argiloso' },
+  { codigo: '11', label: 'Solo AD1 (0,34 a 0,46 mm/cm)' },
+  { codigo: '12', label: 'Solo AD2 (0,46 a 0,61 mm/cm)' },
+  { codigo: '13', label: 'Solo AD3 (0,61 a 0,80 mm/cm)' },
+  { codigo: '14', label: 'Solo AD4 (0,80 a 1,06 mm/cm)' },
+  { codigo: '15', label: 'Solo AD5 (1,06 a 1,40 mm/cm)' },
+  { codigo: '16', label: 'Solo AD6 (≥ 1,40 mm/cm)' },
+  { codigo: '1', label: 'Solo Arenoso' },
+  { codigo: '2', label: 'Solo Textura Média' },
+  { codigo: '3', label: 'Solo Argiloso' },
 ];
