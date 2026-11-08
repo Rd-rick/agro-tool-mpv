@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/jobs/**").authenticated()
                         .requestMatchers("/api/**", "/actuator/**").permitAll()
                         .anyRequest().authenticated()
                 );
